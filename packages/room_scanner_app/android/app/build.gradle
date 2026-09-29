@@ -40,6 +40,16 @@ android {
     // Alineación nativa de 16 KB para bibliotecas ELF en Android 15+.
     experimentalProperties["android.nativeLibraryAlignmentPageSize"] = "16k"
 
+    // Flutter's Gradle integration can add its supported ABIs after
+    // defaultConfig is evaluated. Exclude the legacy 32-bit ABI at the
+    // packaging boundary as well, so ARCore's 4 KB armeabi-v7a binaries
+    // cannot enter the release AAB.
+    packagingOptions {
+        jniLibs {
+            excludes += ["**/armeabi-v7a/**"]
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
@@ -59,6 +69,14 @@ android {
         versionCode flutterVersionCode.toInteger()
 
         versionName flutterVersionName
+
+        // ARCore still ships 32-bit armeabi-v7a binaries with 4 KB ELF
+        // alignment. ARchScan targets 64-bit Android devices; excluding the
+        // obsolete 32-bit ABI keeps the release AAB compatible with 16 KB
+        // page-size devices while retaining arm64 and x86_64 builds.
+        ndk {
+            abiFilters 'arm64-v8a', 'x86_64'
+        }
     }
 
     signingConfigs {

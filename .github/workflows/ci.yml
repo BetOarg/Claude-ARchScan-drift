@@ -89,9 +89,10 @@ jobs:
         run: flutter pub get
         working-directory: packages/room_scanner_core
 
-      - name: Generate Isar / Build Runner code
-        run: flutter pub run build_runner build --delete-conflicting-outputs
+      - name: Generate Drift / Build Runner code
+        run: dart run build_runner build
         working-directory: packages/room_scanner_core
+
 
       - name: Dependency visibility — pub outdated
         working-directory: packages/room_scanner_app
@@ -108,7 +109,7 @@ jobs:
         with:
           name: generated-sources
           path: |
-            packages/room_scanner_core/lib/src/models/isar_models.g.dart
+            packages/room_scanner_core/lib/src/persistence/drift_database.g.dart
             packages/room_scanner_app/lib/l10n/generated
           if-no-files-found: error
           retention-days: 1
@@ -230,6 +231,52 @@ jobs:
       - name: Verify Android Release App Bundle
         working-directory: packages/room_scanner_app
         run: flutter build appbundle --release
+
+      - name: Audit Android 16 KB native libraries
+        working-directory: packages/room_scanner_app
+        shell: bash
+        run: |
+          set -euo pipefail
+          aab="build/app/outputs/bundle/release/app-release.aab"
+          audit_dir="build/16kb-audit"
+          mkdir -p "$audit_dir/native"
+
+          unzip -q "$aab" 'base/lib/*/*.so' -d "$audit_dir/native"
+          mapfile -t libraries < <(find "$audit_dir/native" -type f -name '*.so' | sort)
+
+          if [ "${#libraries[@]}" -eq 0 ]; then
+            echo "::error::El AAB no contiene bibliotecas nativas para auditar."
+            exit 1
+          fi
+
+          incompatible=0
+          : > "$audit_dir/page-alignment.txt"
+
+          for library in "${libraries[@]}"; do
+            relative="${library#"$audit_dir/native/"}"
+            alignments="$(readelf -lW "$library" | awk '$1 == "LOAD" { print $NF }')"
+            printf '%s: %s\n' "$relative" "$alignments" | tee -a "$audit_dir/page-alignment.txt"
+
+            for alignment in $alignments; do
+              if (( alignment < 0x4000 )); then
+                echo "::error::$relative usa alineación $alignment (< 0x4000)"
+                incompatible=1
+              fi
+            done
+          done
+
+          if [ "$incompatible" -ne 0 ]; then
+            echo "::error::El AAB contiene bibliotecas nativas incompatibles con páginas de 16 KB."
+            exit 1
+          fi
+
+      - name: Upload Android 16 KB audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-16kb-audit
+          path: packages/room_scanner_app/build/16kb-audit
+          if-no-files-found: error
+          retention-days: 7
 
   check-ios:
     name: Verify iOS Build

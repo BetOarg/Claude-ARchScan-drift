@@ -4,71 +4,11 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:room_scanner_core/room_scanner_core.dart';
 
-typedef ProjectPersister = Future<void> Function({
-  required String uuid,
-  required String name,
-  required List<RoomModel> rooms,
-});
+import 'floor_plan_room_identity.dart';
+import 'floor_plan_room_placement.dart';
+import 'floor_plan_transform_history.dart';
 
-enum WallAlignmentResult {
-  aligned,
-  noCandidate,
-  overlapPrevented,
-  stalePreview;
-
-  bool get isSuccess => this == WallAlignmentResult.aligned;
-}
-
-enum WallAlignmentPreviewStatus {
-  available,
-  noCandidate,
-  overlapPrevented,
-}
-
-class WallAlignmentPreview {
-  final List<RoomModel> currentRooms;
-  final List<RoomModel> proposedRooms;
-  final Set<String> transformedRoomIds;
-
-  WallAlignmentPreview._({
-    required List<RoomModel> currentRooms,
-    required List<RoomModel> proposedRooms,
-    required Set<String> transformedRoomIds,
-  })  : currentRooms = List<RoomModel>.unmodifiable(currentRooms),
-        proposedRooms = List<RoomModel>.unmodifiable(proposedRooms),
-        transformedRoomIds = Set<String>.unmodifiable(transformedRoomIds);
-}
-
-class WallAlignmentPreviewResult {
-  final WallAlignmentPreviewStatus status;
-  final WallAlignmentPreview? preview;
-
-  const WallAlignmentPreviewResult._({
-    required this.status,
-    this.preview,
-  });
-
-  const WallAlignmentPreviewResult.noCandidate()
-      : this._(status: WallAlignmentPreviewStatus.noCandidate);
-
-  const WallAlignmentPreviewResult.overlapPrevented()
-      : this._(status: WallAlignmentPreviewStatus.overlapPrevented);
-
-  WallAlignmentPreviewResult.available(WallAlignmentPreview preview)
-      : this._(
-          status: WallAlignmentPreviewStatus.available,
-          preview: preview,
-        );
-}
-
-enum AutomaticRoomMoveResult {
-  moved,
-  movedAndAdjusted,
-  rejectedOverlap;
-
-  bool get wasAdjusted => this == AutomaticRoomMoveResult.movedAndAdjusted;
-  bool get wasRejected => this == AutomaticRoomMoveResult.rejectedOverlap;
-}
+part 'floor_plan_provider_types.dart';
 
 class FloorPlanProvider extends ChangeNotifier {
   /// All plan edits share the same snapshot history, including connected rooms.
@@ -101,7 +41,7 @@ class FloorPlanProvider extends ChangeNotifier {
     final parts = PlanEditGeometry.deleteWall(original, index);
     if (parts.isEmpty) return const PlanEditProposal.failed(PlanEditError.invalid);
     for (var i = 1; i < parts.length; i++) {
-      parts[i] = parts[i].copyWith(id: _nextUniqueId());
+      parts[i] = parts[i].copyWith(id: FloorPlanRoomIdentity.nextUniqueId());
     }
     final proposed = <RoomModel>[];
     for (final room in _completedRooms) {
@@ -148,8 +88,6 @@ class FloorPlanProvider extends ChangeNotifier {
   }
 
   static const double _defaultRoomSpacing = 1.0;
-  static const int _maximumTransformHistoryEntries = 50;
-
   MeasurementSystem measurementSystem =
       MeasurementSystem.metric;
 
@@ -159,8 +97,7 @@ class FloorPlanProvider extends ChangeNotifier {
 
   final List<RoomModel> _completedRooms = [];
 
-  final List<_TransformHistoryEntry> _transformUndoHistory = [];
-  final List<_TransformHistoryEntry> _transformRedoHistory = [];
+  final FloorPlanTransformHistory _transformHistory = FloorPlanTransformHistory();
 
   List<RoomModel>? _touchTransformBefore;
   List<RoomModel>? _touchTransformLastValid;
@@ -169,7 +106,6 @@ class FloorPlanProvider extends ChangeNotifier {
 
   ProjectPersister? persister;
 
-  static int _lastGeneratedId = 0;
 
   String? get projectUuid => _projectUuid;
 
@@ -182,78 +118,13 @@ class FloorPlanProvider extends ChangeNotifier {
         _completedRooms,
       );
 
-  bool get canUndoTransform =>
-      _transformUndoHistory.isNotEmpty &&
-      _sameRoomSnapshot(
-        _transformUndoHistory.last.after,
-        _completedRooms,
-      );
+  bool get canUndoTransform => _transformHistory.canUndo(_completedRooms);
 
-  bool get canRedoTransform =>
-      _transformRedoHistory.isNotEmpty &&
-      _sameRoomSnapshot(
-        _transformRedoHistory.last.before,
-        _completedRooms,
-      );
+  bool get canRedoTransform => _transformHistory.canRedo(_completedRooms);
 
   // ===========================================================================
   // IDENTIFICADORES
   // ===========================================================================
-
-  static String _nextUniqueId() {
-    final now =
-        DateTime.now().microsecondsSinceEpoch;
-
-    if (now > _lastGeneratedId) {
-      _lastGeneratedId = now;
-    } else {
-      _lastGeneratedId++;
-    }
-
-    return _lastGeneratedId.toString();
-  }
-
-  /// Repara IDs vacíos o repetidos.
-  ///
-  /// Permite abrir proyectos creados antes de incorporar
-  /// el generador monotónico de identificadores.
-  _RoomNormalizationResult _normalizeRoomIds(
-    List<RoomModel> rooms,
-  ) {
-    final usedIds = <String>{};
-
-    final normalized = <RoomModel>[];
-
-    bool changed = false;
-
-    for (final room in rooms) {
-      var id = room.id.trim();
-
-      if (id.isEmpty ||
-          usedIds.contains(id)) {
-        id = _nextUniqueId();
-
-        changed = true;
-      }
-
-      usedIds.add(id);
-
-      if (id != room.id) {
-        normalized.add(
-          room.copyWith(
-            id: id,
-          ),
-        );
-      } else {
-        normalized.add(room);
-      }
-    }
-
-    return _RoomNormalizationResult(
-      rooms: normalized,
-      changed: changed,
-    );
-  }
 
   // ===========================================================================
   // PROYECTO
@@ -269,7 +140,7 @@ class FloorPlanProvider extends ChangeNotifier {
     _projectName = name;
 
     final normalized =
-        _normalizeRoomIds(
+        FloorPlanRoomIdentity.normalizeIds(
       rooms,
     );
 
@@ -403,7 +274,7 @@ class FloorPlanProvider extends ChangeNotifier {
         duplicate) {
       roomToAdd =
           room.copyWith(
-        id: _nextUniqueId(),
+        id: FloorPlanRoomIdentity.nextUniqueId(),
       );
     }
 
@@ -478,7 +349,7 @@ class FloorPlanProvider extends ChangeNotifier {
       final sharedPoints = pathLength(reversePoints) < pathLength(continuationPoints)
           ? reversePoints : continuationPoints;
       return RoomModel(
-        id: _nextUniqueId(),
+        id: FloorPlanRoomIdentity.nextUniqueId(),
         name: room.name,
         type: room.type,
         points: sharedPoints,
@@ -592,7 +463,7 @@ class FloorPlanProvider extends ChangeNotifier {
           (existing) => existing.id == roomToAdd.id,
         )) {
       roomToAdd = roomToAdd.copyWith(
-        id: _nextUniqueId(),
+        id: FloorPlanRoomIdentity.nextUniqueId(),
       );
     }
 
@@ -719,7 +590,7 @@ class FloorPlanProvider extends ChangeNotifier {
     final previousName = _projectName;
     final before = List<RoomModel>.from(_completedRooms);
     final normalized =
-        _normalizeRoomIds(
+        FloorPlanRoomIdentity.normalizeIds(
       rooms,
     );
 
@@ -817,145 +688,30 @@ class FloorPlanProvider extends ChangeNotifier {
 
   // ===========================================================================  // POSICIONAMIENTO GLOBAL  // ===========================================================================
 
-  /// Traslada una habitación completa.
-  ///
-  /// Se trasladan también todas sus puertas y ventanas.
+  /// Traslada una habitación completa junto con sus aberturas.
   RoomModel _translateRoom(
     RoomModel room, {
     required double offsetX,
     required double offsetZ,
   }) {
-    final translatedPoints =
-        room.points.map(      (point) {        return ARPoint(          x: point.x + offsetX,
-          y: point.y,
-          z: point.z + offsetZ,
-        );
-      },
-    ).toList();
-
-    final translatedFeatures =
-        room.features.map(
-      (feature) {
-        return feature.copyWith(
-          start: ARPoint(
-            x:
-                feature.start.x +
-                    offsetX,
-            y: feature.start.y,
-            z:
-                feature.start.z +
-                    offsetZ,
-          ),
-          end: ARPoint(
-            x:
-                feature.end.x +
-                    offsetX,
-            y: feature.end.y,
-            z:
-                feature.end.z +
-                    offsetZ,
-          ),
-        );
-      },
-    ).toList();
-
-    return room.copyWith(
-      points: translatedPoints,
-      features: translatedFeatures,
-    );
-  }
-
-  /// Posiciona una habitación nueva después de las existentes.
-  ///
-  /// El comportamiento inicial es deliberadamente simple y predecible:
-  ///
-  ///   Habitación 1   Habitación 2   Habitación 3
-  ///   ┌───────┐      ┌───────┐      ┌───────┐
-  ///   │       │ 1 m  │       │ 1 m  │       │
-  ///   └───────┘      └───────┘      └───────┘
-  RoomModel _placeRoomAfterExisting(
-    RoomModel room,
-  ) {
-    if (_completedRooms.isEmpty ||
-        room.points.isEmpty) {
-      return room;
-    }
-
-    double projectMaxX =
-        double.negativeInfinity;
-
-    double projectMinZ =
-        double.infinity;    for (final existing
-        in _completedRooms) {
-      for (final point
-          in existing.points) {
-        if (point.x >
-            projectMaxX) {
-          projectMaxX =
-              point.x;
-        }
-
-        if (point.z <
-            projectMinZ) {
-          projectMinZ =
-              point.z;
-        }
-      }
-    }
-
-    if (!projectMaxX.isFinite) {
-      projectMaxX = 0.0;
-    }
-
-    if (!projectMinZ.isFinite) {
-      projectMinZ = 0.0;
-    }
-    double roomMinX =
-        double.infinity;
-
-    double roomMinZ =
-        double.infinity;
-
-    for (final point
-        in room.points) {
-      if (point.x < roomMinX) {
-        roomMinX =
-            point.x;      }
-
-      if (point.z < roomMinZ) {
-        roomMinZ =
-            point.z;
-      }
-    }
-    if (!roomMinX.isFinite) {
-      roomMinX = 0.0;
-    }
-
-    if (!roomMinZ.isFinite) {
-      roomMinZ = 0.0;
-    }
-
-    final targetMinX =
-        projectMaxX +
-            _defaultRoomSpacing;
-
-    final offsetX =
-        targetMinX -
-            roomMinX;
-
-    final offsetZ =
-        projectMinZ -
-            roomMinZ;
-
-    return _translateRoom(
+    return FloorPlanRoomPlacement.translate(
       room,
       offsetX: offsetX,
       offsetZ: offsetZ,
     );
   }
 
-  /// Arranges independent groups; connections and shared walls stay rigid.
-  /// The first group is the anchor. A single assembled plan is never moved.
+  /// Posiciona una habitación nueva después de las existentes.
+  RoomModel _placeRoomAfterExisting(
+    RoomModel room,
+  ) {
+    return FloorPlanRoomPlacement.placeAfterExisting(
+      room,
+      _completedRooms,
+      spacing: _defaultRoomSpacing,
+    );
+  }
+
   Future<bool> autoArrangeRooms({
     double spacing = _defaultRoomSpacing,
   }) async {
@@ -2089,7 +1845,8 @@ class FloorPlanProvider extends ChangeNotifier {
     }
 
     final uuid = _projectUuid;
-    final entry = _transformUndoHistory.last;
+    final entry = _transformHistory.peekUndo(_completedRooms);
+    if (entry == null) return false;
     final before = List<RoomModel>.from(_completedRooms);
     _completedRooms
       ..clear()
@@ -2097,9 +1854,7 @@ class FloorPlanProvider extends ChangeNotifier {
     notifyListeners();
     if (!await _persistRoomChange(before)) return false;
     if (_projectUuid == uuid && _sameRoomSnapshot(entry.before, _completedRooms) &&
-        _transformUndoHistory.isNotEmpty && identical(_transformUndoHistory.last, entry)) {
-      _transformUndoHistory.removeLast();
-      _transformRedoHistory.add(entry);
+        _transformHistory.moveUndoToRedo(entry)) {
       notifyListeners();
     }
     return true;
@@ -2112,7 +1867,8 @@ class FloorPlanProvider extends ChangeNotifier {
     }
 
     final uuid = _projectUuid;
-    final entry = _transformRedoHistory.last;
+    final entry = _transformHistory.peekRedo(_completedRooms);
+    if (entry == null) return false;
     final before = List<RoomModel>.from(_completedRooms);
     _completedRooms
       ..clear()
@@ -2120,47 +1876,25 @@ class FloorPlanProvider extends ChangeNotifier {
     notifyListeners();
     if (!await _persistRoomChange(before)) return false;
     if (_projectUuid == uuid && _sameRoomSnapshot(entry.after, _completedRooms) &&
-        _transformRedoHistory.isNotEmpty && identical(_transformRedoHistory.last, entry)) {
-      _transformRedoHistory.removeLast();
-      _transformUndoHistory.add(entry);
+        _transformHistory.moveRedoToUndo(entry)) {
       notifyListeners();
     }
     return true;
   }
 
   void _recordTransform(List<RoomModel> before) {
-    if (_sameRoomSnapshot(before, _completedRooms)) return;
-    _transformUndoHistory.add(
-      _TransformHistoryEntry(
-        before: before,
-        after: List<RoomModel>.from(_completedRooms),
-      ),
-    );
-    if (_transformUndoHistory.length >
-        _maximumTransformHistoryEntries) {
-      _transformUndoHistory.removeAt(0);
-    }
-    _transformRedoHistory.clear();
+    _transformHistory.record(before, _completedRooms);
   }
 
   void _clearTransformHistory() {
-    _transformUndoHistory.clear();
-    _transformRedoHistory.clear();
+    _transformHistory.clear();
   }
 
   bool _sameRoomSnapshot(
     List<RoomModel> first,
     List<RoomModel> second,
   ) {
-    if (first.length != second.length) {
-      return false;
-    }
-
-    for (var index = 0; index < first.length; index++) {
-      if (!identical(first[index], second[index])) {
-        return false;
-      }    }
-    return true;
+    return FloorPlanTransformHistory.sameSnapshot(first, second);
   }
 
   RoomModel _rotateRoom(
@@ -2759,7 +2493,7 @@ class FloorPlanProvider extends ChangeNotifier {
     }
     final before = List<RoomModel>.from(_completedRooms);
     final created = original == null ? WallFeature(
-      id: _nextUniqueId(), type: type, start: start, end: end,
+      id: FloorPlanRoomIdentity.nextUniqueId(), type: type, start: start, end: end,
       openingHeightMeters: openingHeightMeters, sillHeightMeters: sillHeightMeters,
     ) : null;
     for (final i in affected) {
@@ -2807,67 +2541,41 @@ class FloorPlanProvider extends ChangeNotifier {
   // MÉTRICAS
   // ===========================================================================
 
-  double wallLength(
-    RoomModel room,
-    int wallIndex,
-  ) {
-    final points =        room.points;
-
-    if (points.length < 2 ||
-        wallIndex < 0 ||
-        wallIndex >=
-            points.length) {
+  double wallLength(RoomModel room, int wallIndex) {
+    if (wallIndex < 0 || wallIndex >= PlanEditGeometry.wallCount(room)) {
       return 0.0;
     }
-
-    final start =
-        points[wallIndex];
-
-    final end =
-        points[
-          (wallIndex + 1) %
-              points.length
-        ];
-
-    return GeometryService
-        .calculateDistance(
-      start,
-      end,
+    return PlanEditGeometry.distance(
+      room.points[wallIndex],
+      room.points[(wallIndex + 1) % room.points.length],
     );
   }
 
   double get totalProjectArea {
     double total = 0.0;
-
-    for (final room
-        in _completedRooms) {
+    for (final room in _completedRooms) {
       if (!room.isClosed) continue;
-      total +=
-          GeometryService
-              .calculateArea(
-        room.points,
-      );
+      total += GeometryService.calculateArea(room.points);
     }
+    return total;
+  }
 
-    return total;  }
-
-  List<Map<String, dynamic>>
-      get roomSummaries {
+  List<Map<String, dynamic>> get roomSummaries {
     return _completedRooms
         .map(
           (room) => {
             'id': room.id,
             'name': room.name,
-            'type':
-                room.type.name,
+            'type': room.type.name,
             'area': PlanEditGeometry.area(room).toStringAsFixed(2),
             'perimeter': PlanEditGeometry.perimeter(room).toStringAsFixed(2),
-            'pointsCount':
-                room.points.length,
+            'pointsCount': room.points.length,
           },
         )
         .toList();
-  }  // ===========================================================================
+  }
+
+  // ===========================================================================
   // REAJUSTE DE ABERTURAS
   // ===========================================================================
 
@@ -2906,148 +2614,5 @@ class FloorPlanProvider extends ChangeNotifier {
         'Mi Casa Completa';
 
     notifyListeners();
-  }
-}
-
-enum PlanEditError { invalid, connection, overlap, noClosure, stale }
-
-class PlanEditProposal {
-  final List<RoomModel> before;
-  final List<RoomModel> after;
-  final List<ARPoint> returnPath;
-  final PlanEditError? error;
-  PlanEditProposal(List<RoomModel> before, List<RoomModel> after,
-      {List<ARPoint> returnPath = const []})
-      : before = List.unmodifiable(before), after = List.unmodifiable(after),
-        returnPath = List.unmodifiable(returnPath), error = null;
-  const PlanEditProposal.failed(this.error)
-      : before = const [], after = const [], returnPath = const [];
-}
-
-class _TransformHistoryEntry {
-  final List<RoomModel> before;
-  final List<RoomModel> after;
-
-  const _TransformHistoryEntry({
-    required this.before,
-    required this.after,
-  });
-}
-
-class _WallAlignmentCandidate {
-  final double centerX;
-  final double centerZ;
-  final double rotationRadians;
-  final double offsetX;
-  final double offsetZ;
-  final double score;
-
-  const _WallAlignmentCandidate({
-    required this.centerX,
-    required this.centerZ,
-    required this.rotationRadians,
-    required this.offsetX,
-    required this.offsetZ,
-    required this.score,  });
-}
-
-class _RoomNormalizationResult {
-  final List<RoomModel> rooms;
-
-  final bool changed;
-
-  const _RoomNormalizationResult({
-    required this.rooms,
-    required this.changed,
-  });
-}
-
-class OpeningPlacement {
-  final double widthMeters;
-  final double distanceFromWallStartMeters;
-  final double wallLengthMeters;
-  final double openingHeightMeters;
-  final double sillHeightMeters;
-
-  const OpeningPlacement({
-    required this.widthMeters,
-    required this.distanceFromWallStartMeters,    required this.wallLengthMeters,
-    required this.openingHeightMeters,    required this.sillHeightMeters,
-  });
-}
-
-class OpeningGeometryUpdateResult {
-  final bool isSuccess;
-  final String? errorMessage;
-
-  const OpeningGeometryUpdateResult.success()
-      : isSuccess = true,
-        errorMessage = null;
-
-  const OpeningGeometryUpdateResult.invalid(this.errorMessage)
-      : isSuccess = false;}
-
-class _WallProjection {
-  final ARPoint start;
-  final ARPoint end;
-  final double dx;
-  final double dz;
-  final double lengthSquared;
-  final double length;
-
-  const _WallProjection._({
-    required this.start,
-    required this.end,
-    required this.dx,
-    required this.dz,
-    required this.lengthSquared,
-    required this.length,  });
-
-  static _WallProjection? create(ARPoint start, ARPoint end) {
-    final dx = end.x - start.x;
-    final dz = end.z - start.z;
-    final lengthSquared = dx * dx + dz * dz;
-    if (lengthSquared <= 0.000001) return null;
-
-    return _WallProjection._(
-      start: start,
-      end: end,
-      dx: dx,
-      dz: dz,
-      lengthSquared: lengthSquared,
-      length: math.sqrt(lengthSquared),
-    );
-  }
-
-  double projection(ARPoint point) {
-    return (((point.x - start.x) * dx +
-                (point.z - start.z) * dz) /
-            lengthSquared)
-        .clamp(0.0, 1.0)
-        .toDouble();
-  }
-
-  ARPoint pointAt(double t) {
-    return ARPoint(
-      x: start.x + dx * t,
-      y: start.y + (end.y - start.y) * t,
-      z: start.z + dz * t,
-    );
-  }
-
-  bool contains(ARPoint point) {
-    final rawProjection =
-        ((point.x - start.x) * dx +
-                (point.z - start.z) * dz) /
-            lengthSquared;
-    if (rawProjection < -0.01 || rawProjection > 1.01) {
-      return false;
-    }
-
-    final projected = pointAt(rawProjection);
-    final distanceX = point.x - projected.x;
-    final distanceZ = point.z - projected.z;
-    return distanceX * distanceX + distanceZ * distanceZ <=
-        0.0025;
   }
 }
