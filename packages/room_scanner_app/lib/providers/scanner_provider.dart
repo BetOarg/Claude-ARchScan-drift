@@ -307,183 +307,54 @@ class ScannerProvider extends ChangeNotifier {
       );
     }
 
-    final referencePoint =
-        isCameraMeasurement
-            ? ARPoint(
-                x:
-                    (location.x +
-                            endLocation!.x) /
-                        2.0,
-                y:
-                    (location.y +
-                            endLocation!.y) /
-                        2.0,
-                z:
-                    (location.z +
-                            endLocation!.z) /
-                        2.0,
-              )
-            : location;
-
-    int nearestWallIndex = -1;
-    double nearestDistanceSquared =
-        double.infinity;
+    final referencePoint = isCameraMeasurement
+        ? ARPoint(
+            x: (location.x + endLocation!.x) / 2.0,
+            y: (location.y + endLocation.y) / 2.0,
+            z: (location.z + endLocation.z) / 2.0,
+          )
+        : location;
 
     // Con tres o más esquinas también existe el tramo de cierre entre la
     // última esquina y la primera. Debe participar antes de cerrar el ambiente
     // para poder colocar puertas o ventanas sobre esa pared.
-    final wallCount = points.length >= 3
-        ? points.length
-        : points.length - 1;
+    final wallCount = points.length >= 3 ? points.length : points.length - 1;
 
     if (preferredWallIndex != null &&
-        (preferredWallIndex < 0 ||
-            preferredWallIndex >= wallCount)) {
+        (preferredWallIndex < 0 || preferredWallIndex >= wallCount)) {
       return ValidationResult.invalid(
         'La pared seleccionada no es válida.',
       );
     }
 
-    for (int index = 0;
-        index < wallCount;
-        index++) {
-      if (preferredWallIndex != null &&
-          index != preferredWallIndex) {
-        continue;
-      }
-      final start =
-          points[index];
+    WallSegment? wallAt(int index) =>
+        WallSegment.between(points[index], points[(index + 1) % points.length]);
 
-      final end =
-          points[(index + 1) % points.length];
+    final wallIndex = preferredWallIndex != null
+        ? (wallAt(preferredWallIndex) == null ? -1 : preferredWallIndex)
+        : WallSegment.nearestWallIndex(points, wallCount, referencePoint);
 
-      final dx =
-          end.x - start.x;
-
-      final dz =
-          end.z - start.z;
-
-      final lengthSquared =
-          dx * dx + dz * dz;
-
-      if (lengthSquared <=
-          0.000001) {
-        continue;
-      }
-
-      final rawT =
-          ((referencePoint.x - start.x) * dx +
-                  (referencePoint.z - start.z) * dz) /
-              lengthSquared;
-
-      final projectedT =
-          rawT.clamp(0.0, 1.0)
-              .toDouble();
-
-      final projectedX =
-          start.x + dx * projectedT;
-
-      final projectedZ =
-          start.z + dz * projectedT;
-
-      final distanceX =
-          referencePoint.x -
-              projectedX;
-
-      final distanceZ =
-          referencePoint.z -
-              projectedZ;
-
-      final distanceSquared =
-          distanceX * distanceX +
-              distanceZ * distanceZ;
-
-      if (distanceSquared <
-          nearestDistanceSquared) {
-        nearestDistanceSquared =
-            distanceSquared;
-
-        nearestWallIndex =
-            index;
-      }
-    }
-
-    if (nearestWallIndex < 0) {
+    if (wallIndex < 0) {
       return ValidationResult.invalid(
         'No se encontró una pared válida.',
       );
     }
 
-    final wallStart =
-        points[nearestWallIndex];
-
-    final wallEnd =
-        points[(nearestWallIndex + 1) % points.length];
-
-    final wallDx =
-        wallEnd.x - wallStart.x;
-
-    final wallDz =
-        wallEnd.z - wallStart.z;
-
-    final wallLengthSquared =
-        wallDx * wallDx +
-            wallDz * wallDz;
-
-    final wallLength =
-        math.sqrt(
-      wallLengthSquared,
-    );
-
-    if (wallLength <=
-        0.000001) {
-      return ValidationResult.invalid(
-        'La pared seleccionada no tiene una longitud válida.',
-      );
-    }
-
-    double projectToWall(
-      ARPoint point,
-    ) {
-      return (((point.x - wallStart.x) * wallDx +
-                  (point.z - wallStart.z) * wallDz) /
-              wallLengthSquared)
-          .clamp(0.0, 1.0)
-          .toDouble();
-    }
+    final wall = wallAt(wallIndex)!;
 
     late double startT;
     late double endT;
     late double measuredWidth;
 
     if (isCameraMeasurement) {
-      final firstT =
-          projectToWall(
-        location,
-      );
+      final firstT = wall.fraction(location);
+      final secondT = wall.fraction(endLocation!);
 
-      final secondT =
-          projectToWall(
-        endLocation!,
-      );
+      startT = math.min(firstT, secondT);
+      endT = math.max(firstT, secondT);
+      measuredWidth = (endT - startT) * wall.length;
 
-      startT =
-          math.min(
-        firstT,
-        secondT,
-      ).toDouble();
-
-      endT =
-          math.max(
-        firstT,
-        secondT,
-      ).toDouble();
-
-      measuredWidth =          (endT - startT) *
-              wallLength;
-
-      if (measuredWidth <
-          0.20) {
+      if (measuredWidth < 0.20) {
         return ValidationResult.invalid(
           'Los dos puntos de la abertura están demasiado cerca. '
           'Medida detectada: '
@@ -491,165 +362,37 @@ class ScannerProvider extends ChangeNotifier {
         );
       }
     } else {
-      measuredWidth =
-          widthMeters!;
+      measuredWidth = widthMeters!;
 
-      if (measuredWidth >
-          wallLength) {
+      final startMeters = wall.centredOpeningStart(location, measuredWidth);
+      if (startMeters == null) {
         return ValidationResult.invalid(
           'La abertura mide '
           '${_formatLength(measuredWidth)}, '
           'pero la pared mide '
-          '${_formatLength(wallLength)}.',
+          '${_formatLength(wall.length)}.',
         );
       }
 
-      final centerT =
-          projectToWall(
-        location,
-      );
-
-      final fraction =
-          measuredWidth /
-              wallLength;
-
-      final maximumStartT =
-          1.0 - fraction;
-
-      startT =
-          (centerT -
-                  fraction / 2.0)
-              .clamp(
-                0.0,
-                maximumStartT,
-              )
-              .toDouble();
-
-      endT =
-          startT +
-              fraction;
+      startT = startMeters / wall.length;
+      endT = startT + measuredWidth / wall.length;
     }
 
-    final featureStart =
-        ARPoint(
-      x:
-          wallStart.x +
-              wallDx * startT,
-      y:
-          wallStart.y +
-              (wallEnd.y -
-                      wallStart.y) *
-                  startT,
-      z:
-          wallStart.z +
-              wallDz * startT,
-    );
+    final featureStart = wall.pointAt(startT);
+    final featureEnd = wall.pointAt(endT);
 
-    final featureEnd =
-        ARPoint(
-      x:
-          wallStart.x +
-              wallDx * endT,
-      y:
-          wallStart.y +
-              (wallEnd.y -
-                      wallStart.y) *
-                  endT,
-      z:
-          wallStart.z +
-              wallDz * endT,
-    );
-
-    // Impide que dos aberturas ocupen el mismo tramo de pared.
-    for (final existing
-        in room.features) {
-      double rawProjection(
-        ARPoint point,      ) {
-        return ((point.x - wallStart.x) * wallDx +
-                (point.z - wallStart.z) * wallDz) /
-            wallLengthSquared;
-      }
-
-      bool belongsToWall(
-        ARPoint point,
-      ) {        final rawT =
-            rawProjection(point);
-
-        if (rawT < -0.01 ||
-            rawT > 1.01) {
-          return false;
-        }
-
-        final projectedX =
-            wallStart.x +
-                wallDx * rawT;
-
-        final projectedZ =
-            wallStart.z +
-                wallDz * rawT;
-
-        final distanceX =
-            point.x -
-                projectedX;
-
-        final distanceZ =
-            point.z -
-                projectedZ;
-
-        return distanceX * distanceX +
-                distanceZ * distanceZ <=
-            0.0025;
-      }
-
-      if (!belongsToWall(
-            existing.start,
-          ) ||
-          !belongsToWall(
-            existing.end,
-          )) {
-        continue;
-      }
-
-      final existingStartT =
-          rawProjection(
-        existing.start,
-      ).clamp(0.0, 1.0)
-              .toDouble();
-
-      final existingEndT =
-          rawProjection(
-        existing.end,
-      ).clamp(0.0, 1.0)
-              .toDouble();
-
-      final existingMinT =          math.min(
-        existingStartT,
-        existingEndT,
-      ).toDouble();
-
-      final existingMaxT =
-          math.max(
-        existingStartT,
-        existingEndT,
-      ).toDouble();
-
-      const separation =
-          0.02;
-
-      final overlaps =
-          startT <
-                  existingMaxT -
-                      separation &&
-              existingMinT <
-                  endT -
-                      separation;
-
-      if (overlaps) {
-        return ValidationResult.invalid(
-          'La abertura se superpone con otra puerta o ventana. '
-          'Elegí otra posición sobre la pared.',
-        );
-      }
+    // Impide que dos aberturas ocupen el mismo tramo de pared. La separación
+    // mínima está en metros, igual que al editar la abertura en el plano.
+    if (wall.overlapsOpening(
+      startT * wall.length,
+      endT * wall.length,
+      room.features,
+      separationMeters: 0.02,
+    )) {
+      return ValidationResult.invalid(
+        'La abertura se superpone con otra puerta o ventana. '
+        'Elegí otra posición sobre la pared.',
+      );
     }
 
     final feature =
