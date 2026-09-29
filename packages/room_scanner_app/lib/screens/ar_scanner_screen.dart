@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:ar_flutter_plugin_2/datatypes/config_planedetection.dart';
 import 'package:ar_flutter_plugin_2/managers/ar_anchor_manager.dart';
@@ -14,23 +13,19 @@ import 'package:vector_math/vector_math_64.dart' as vector;
 
 import '../l10n/generated/app_localizations.dart';
 import '../l10n/validation_error_localization.dart';
-import '../l10n/room_type_localization.dart';
 import '../providers/floor_plan_provider.dart';
 import '../providers/measurement_settings_provider.dart';
 import '../providers/scanner_provider.dart';
 import '../services/permission_service.dart';
 import '../services/resume_room_calibration.dart';
-import '../services/scan_draft_service.dart';
-import '../widgets/room_name_dialog.dart';
-import '../widgets/room_completion_dialog.dart';
 import '../widgets/opening_placement_dialog.dart'
     show showOpeningPlacementDialog;
 import '../widgets/scanner_plan_opening_hint.dart';
 import '../widgets/scanner_guide_painter.dart';
 import '../scanner/adapters/ar_scanner_adapter.dart';
+import '../scanner/scanner_room_session.dart';
 import '../scanner/widgets/archscan_ar_view.dart';
 import 'basic_scanner_screen.dart';
-import 'floor_plan_viewer_screen.dart';
 
 enum AppMode { wall, door, window }
 
@@ -62,17 +57,9 @@ class ARScannerScreen extends StatefulWidget {
 }
 
 class _ARScannerScreenState extends State<ARScannerScreen>
-    with WidgetsBindingObserver {
-  static const ScanDraftService _scanDraftService = ScanDraftService();
-
+    with WidgetsBindingObserver, ScannerRoomSession<ARScannerScreen> {
   final AppMode _currentMode = AppMode.wall;
   bool _placingOpening = false;
-  ScanContinuationReference? _activeContinuationReference;
-  RoomModel? _activeResumeRoom;
-  ScannerProvider? _draftProvider;
-  Timer? _draftSaveTimer;
-  String? _lastDraftFingerprint;
-
   ARPoint? _pendingFeatureStart;
   AppMode? _pendingFeatureMode;
 
@@ -80,7 +67,7 @@ class _ARScannerScreenState extends State<ARScannerScreen>
   vector.Vector3? _continuationSessionEnd;
 
   bool get _requiresContinuationCalibration =>
-      _activeContinuationReference != null || _activeResumeRoom != null;
+      activeContinuationReference != null || activeResumeRoom != null;
 
   bool get _isContinuationCalibrated =>
       !_requiresContinuationCalibration ||
@@ -124,8 +111,8 @@ class _ARScannerScreenState extends State<ARScannerScreen>
   void initState() {
     super.initState();
 
-    _activeContinuationReference = widget.continuationReference;
-    _activeResumeRoom = widget.resumeRoom;
+    activeContinuationReference = widget.continuationReference;
+    activeResumeRoom = widget.resumeRoom;
     _appIsResumed =
         WidgetsBinding.instance.lifecycleState == null ||
         WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
@@ -165,123 +152,9 @@ class _ARScannerScreenState extends State<ARScannerScreen>
       if (!mounted) return;
 
       final provider = context.read<ScannerProvider>();
-      await _restoreOrStartRoom(provider);
-      _attachDraftListener(provider);
+      await restoreOrStartScanRoom(provider);
+      attachScanDraftListener(provider);
     });
-  }
-
-  Future<void> _restoreOrStartRoom(ScannerProvider provider) async {
-    final resumeRoom = _activeResumeRoom;
-    if (resumeRoom != null) {
-      provider.restoreCurrentRoom(resumeRoom);
-      return;
-    }
-
-    final draft = await _scanDraftService.load(widget.projectUuid);
-    if (!mounted) return;
-
-    if (draft == null) {
-      provider.startNewRoom();
-      return;
-    }
-
-    final draftRoomWasClosed = context
-        .read<FloorPlanProvider>()
-        .completedRooms
-        .any((room) => room.id == draft.room.id && room.isClosed);
-    if (draftRoomWasClosed) {
-      await _scanDraftService.clear(widget.projectUuid);
-      if (!mounted) return;
-      _lastDraftFingerprint = null;
-      provider.startNewRoom();
-      return;
-    }
-
-    final continueDraft = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        final l10n = AppLocalizations.of(dialogContext)!;
-        return AlertDialog(
-          title: Text(l10n.unfinishedScan),
-          content: Text(l10n.unfinishedScanFound),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(l10n.discardScan),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(l10n.continueScan),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (!mounted) return;
-
-    if (continueDraft == true) {
-      _activeContinuationReference = draft.continuationReference;
-      _activeResumeRoom = draft.resumeRoom;
-      provider.restoreCurrentRoom(draft.room);
-      return;
-    }
-
-    await _scanDraftService.clear(widget.projectUuid);
-    _lastDraftFingerprint = null;
-    provider.startNewRoom();
-  }
-
-  void _attachDraftListener(ScannerProvider provider) {
-    _draftProvider?.removeListener(_onScannerDraftChanged);
-    _draftProvider = provider;
-    provider.addListener(_onScannerDraftChanged);
-    _onScannerDraftChanged();
-  }
-
-  void _onScannerDraftChanged() {
-    final room = _draftProvider?.currentRoom;
-    if (room == null || (room.points.isEmpty && room.features.isEmpty)) {
-      return;
-    }
-
-    final fingerprint = jsonEncode(<String, dynamic>{
-      'room': room.toJson(),
-      'continuation': _activeContinuationReference?.featureId,
-    });
-    if (fingerprint == _lastDraftFingerprint) return;
-
-    _draftSaveTimer?.cancel();
-    _draftSaveTimer = Timer(const Duration(milliseconds: 250), () {
-      _scanDraftService
-          .save(
-            projectUuid: widget.projectUuid,
-            room: room,
-            resumeRoom: _activeResumeRoom,
-            continuationReference: _activeContinuationReference,
-          )
-          .then((_) {
-            _lastDraftFingerprint = fingerprint;
-          })
-          .catchError((Object error) {
-            _lastDraftFingerprint = null;
-            debugPrint('No se pudo guardar el borrador: $error');
-          });
-    });
-  }
-
-  Future<void> _flushDraft() async {
-    _draftSaveTimer?.cancel();
-    final room = _draftProvider?.currentRoom;
-    if (room == null || (room.points.isEmpty && room.features.isEmpty)) return;
-
-    await _scanDraftService.save(
-      projectUuid: widget.projectUuid,
-      room: room,
-      resumeRoom: _activeResumeRoom,
-      continuationReference: _activeContinuationReference,
-    );
   }
 
   @override
@@ -295,7 +168,7 @@ class _ARScannerScreenState extends State<ARScannerScreen>
       }
 
       _appIsResumed = false;
-      _flushDraft();
+      flushScanDraft();
       _pendingFeatureStart = null;
       _pendingFeatureMode = null;
 
@@ -356,9 +229,7 @@ class _ARScannerScreenState extends State<ARScannerScreen>
 
   @override
   void dispose() {
-    _flushDraft();
-    _draftSaveTimer?.cancel();
-    _draftProvider?.removeListener(_onScannerDraftChanged);
+    disposeScanRoomSession();
     _arInitializationTimer?.cancel();
     _appIsResumed = false;
     WidgetsBinding.instance.removeObserver(this);
@@ -458,7 +329,7 @@ class _ARScannerScreenState extends State<ARScannerScreen>
         builder: (_) => BasicScannerScreen(
           projectUuid: widget.projectUuid,
           projectName: widget.projectName,
-          continuationReference: _activeContinuationReference,
+          continuationReference: activeContinuationReference,
         ),
       ),
     );
@@ -619,14 +490,14 @@ class _ARScannerScreenState extends State<ARScannerScreen>
                     features:
                         provider.currentRoom?.features ?? const <WallFeature>[],
                     previousRooms:
-                        _activeContinuationReference == null &&
-                            _activeResumeRoom == null
+                        activeContinuationReference == null &&
+                            activeResumeRoom == null
                         ? const <RoomModel>[]
                         : context
                               .watch<FloorPlanProvider>()
                               .completedRooms
                               .toList(growable: false),
-                    continuationReference: _activeContinuationReference,
+                    continuationReference: activeContinuationReference,
                   ),
                 ),
               ),
@@ -675,7 +546,7 @@ class _ARScannerScreenState extends State<ARScannerScreen>
                   border: Border.all(color: Colors.white24),
                 ),
                 child: Text(
-                  _scanRecommendation(provider.currentPointsCount, l10n),
+                  scanRecommendation(provider.currentPointsCount, l10n),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(color: Colors.white, fontSize: 13),
@@ -889,57 +760,23 @@ class _ARScannerScreenState extends State<ARScannerScreen>
     );
   }
 
-  String _localizedRoomName(ScannerProvider provider, AppLocalizations l10n) {
-    final room = provider.currentRoom;
-
-    if (room == null) {
-      return l10n.newRoom;
-    }
-
-    final defaultName = room.type.displayName;
-
-    return room.name == defaultName ? room.type.localizedName(l10n) : room.name;
-  }
-
-  String _scanRecommendation(int cornerCount, AppLocalizations l10n) {
-    if (cornerCount == 0) return l10n.markStartRecommendation;
-    if (cornerCount < 3) return l10n.addNextCornerRecommendation;
-    return l10n.closeSpaceRecommendation;
-  }
-
-  Future<void> _showCustomRoomNameDialog(ScannerProvider provider) async {
-    final l10n = AppLocalizations.of(context)!;
-    final name = await showRoomNameDialog(
-      context: context,
-      initialName:
-          provider.currentRoom?.name ??
-          provider.selectedType.localizedName(l10n),
-    );
-
-    if (!mounted || name == null || name.trim().isEmpty) {
-      return;
-    }
-
-    provider.setCurrentRoomName(name);
-  }
-
   Widget _buildAdaptiveTopHud(ScannerProvider provider, AppLocalizations l10n) {
     Widget roomNameChip() => ActionChip(
       tooltip: l10n.editRoomName,
       avatar: const Icon(Icons.edit_outlined, size: 16, color: Colors.white),
       label: Text(
-        _localizedRoomName(provider, l10n),
+        localizedScanRoomName(provider, l10n),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      onPressed: () => _showCustomRoomNameDialog(provider),
+      onPressed: () => showCustomRoomNameDialog(provider),
       backgroundColor: Colors.black87,
       labelStyle: const TextStyle(color: Colors.white),
     );
 
     final planButton = IconButton.filledTonal(
       tooltip: l10n.viewPlan,
-      onPressed: _openFloorPlan,
+      onPressed: openScanFloorPlan,
       icon: const Icon(Icons.map_outlined),
       style: IconButton.styleFrom(
         backgroundColor: Colors.black87,
@@ -948,7 +785,7 @@ class _ARScannerScreenState extends State<ARScannerScreen>
     );
     final closeButton = IconButton.filledTonal(
       tooltip: l10n.closeProject,
-      onPressed: _closeProject,
+      onPressed: closeScanProject,
       icon: const Icon(Icons.close),
       style: IconButton.styleFrom(
         backgroundColor: Colors.black87,
@@ -1008,7 +845,7 @@ class _ARScannerScreenState extends State<ARScannerScreen>
 
   String _continuationInstruction() {
     final l10n = AppLocalizations.of(context)!;
-    final resumesRoom = _activeResumeRoom != null;
+    final resumesRoom = activeResumeRoom != null;
 
     if (_continuationSessionStart == null) {
       return resumesRoom
@@ -1028,7 +865,7 @@ class _ARScannerScreenState extends State<ARScannerScreen>
   }
 
   String _continuationCaptureLabel(AppLocalizations l10n) {
-    if (_activeResumeRoom != null) {
+    if (activeResumeRoom != null) {
       return _continuationSessionStart == null
           ? l10n.markPreviousVertex
           : l10n.markStartVertex;
@@ -1079,8 +916,8 @@ class _ARScannerScreenState extends State<ARScannerScreen>
       return;
     }
 
-    if (_activeResumeRoom != null) {
-      final points = _activeResumeRoom!.points;
+    if (activeResumeRoom != null) {
+      final points = activeResumeRoom!.points;
       final calibration = points.length < 2
           ? null
           : ResumeRoomCalibration.tryCreate(
@@ -1120,7 +957,7 @@ class _ARScannerScreenState extends State<ARScannerScreen>
       _continuationSessionEnd = position;
     });
 
-    final expectedWidth = _activeContinuationReference!.width;
+    final expectedWidth = activeContinuationReference!.width;
     final difference = (measuredWidth - expectedWidth).abs();
     final measurementSystem = context
         .read<MeasurementSettingsProvider>()
@@ -1169,8 +1006,8 @@ class _ARScannerScreenState extends State<ARScannerScreen>
     final start = _continuationSessionStart!;
     final end = _continuationSessionEnd!;
 
-    if (_activeResumeRoom != null) {
-      final points = _activeResumeRoom!.points;
+    if (activeResumeRoom != null) {
+      final points = activeResumeRoom!.points;
       if (points.length < 2) return sessionPoint;
       final calibration = ResumeRoomCalibration.tryCreate(
         modelPrevious: points[points.length - 2],
@@ -1186,7 +1023,7 @@ class _ARScannerScreenState extends State<ARScannerScreen>
           : vector.Vector3(transformed.x, transformed.y, transformed.z);
     }
 
-    final reference = _activeContinuationReference!;
+    final reference = activeContinuationReference!;
     final sessionOrigin =
         reference.startEndpoint == ContinuationStartEndpoint.start
         ? start
@@ -1383,7 +1220,7 @@ class _ARScannerScreenState extends State<ARScannerScreen>
         room: room,
         type: type,
         system: context.read<MeasurementSettingsProvider>().system,
-        reference: _activeContinuationReference,
+        reference: activeContinuationReference,
         initialFeature: measured,
       );
       if (!mounted ||
@@ -1427,172 +1264,28 @@ class _ARScannerScreenState extends State<ARScannerScreen>
   // CIERRE Y PERSISTENCIA DE LA HABITACIÓN
   // ================================================================
 
-  bool _closingRoom = false;
-
   Future<void> _onCloseRoomPressed(ScannerProvider provider) async {
-    if (_closingRoom || _placingOpening) return;
-    _closingRoom = true;
-    try {
-      await _closeRoomOnce(provider);
-    } finally {
-      _closingRoom = false;
-    }
-  }
-
-  Future<void> _closeRoomOnce(ScannerProvider provider) async {
-    HapticFeedback.mediumImpact();
-
-    final l10n = AppLocalizations.of(context)!;
-    final roomName = await showRoomNameDialog(
-      context: context,
-      initialName:
-          provider.currentRoom?.name ??
-          provider.selectedType.localizedName(l10n),
-    );
-    if (!mounted || roomName == null || roomName.trim().isEmpty) {
-      return;
-    }
-    provider.setCurrentRoomName(roomName);
-
-    final continuation = _activeContinuationReference;
-    if (continuation != null) {
-      final suggestion = ScanValidator.suggestOrthogonalClosurePoint(
-        provider.currentRoom?.points ?? const <ARPoint>[],
-      );
-      if (suggestion != null) {
-        final confirmed = await confirmOrthogonalContinuationClosure(context);
-        if (!mounted || !confirmed) {
-          return;
-        }
-        final addition = provider.tryAddPoint(
-          suggestion.x,
-          suggestion.y,
-          suggestion.z,
-        );
-        if (!addition.isValid) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                addition.errorMessage ??
-                    AppLocalizations.of(context)!.invalidCorner,
-              ),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
-          return;
-        }
-      }
-    }
-
-    final floorPlanProvider = context.read<FloorPlanProvider>();
-
-    if (continuation != null) {
-      final sourceFeature = floorPlanProvider.findFeature(
-        roomId: continuation.sourceRoomId,
-        featureId: continuation.featureId,
-      );
-
-      if (sourceFeature == null || sourceFeature.isConnected) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              sourceFeature == null
-                  ? l10n.referenceOpeningMissing
-                  : l10n.openingAlreadyConnected,
-            ),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
-        return;
-      }
-    }
-
-    final closedRoom = provider.closeCurrentRoom();
-
-    if (!mounted) return;
-
-    if (closedRoom == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(provider.lastCloseError ?? l10n.closeRoomFailed),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-
-      return;
-    }
-
-    final resumeRoom = _activeResumeRoom;
-    final resumesExistingRoom =
-        resumeRoom != null &&
-        floorPlanProvider.completedRooms.any(
-          (room) => room.id == resumeRoom.id,
-        );
-    final saved = resumesExistingRoom
-        ? await floorPlanProvider.replaceCompletedRoom(
-            closedRoom,
-            expectedOpenRoom: resumeRoom,
-          )
-        : continuation == null
-        ? await floorPlanProvider.addCompletedRoom(
-            closedRoom,
-            preservePlacement: resumeRoom != null,
-          )
-        : await floorPlanProvider.addCompletedRoomFromContinuation(
-            room: closedRoom,
-            reference: continuation,
-          );
-
-    if (!saved) {
-      provider.restoreCurrentRoom(closedRoom.copyWith(isClosed: false));
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.closeRoomFailed),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-      return;
-    }
-
-    _draftSaveTimer?.cancel();
-    await _scanDraftService.clear(widget.projectUuid);
-    _lastDraftFingerprint = null;
-
-    if (!mounted) return;
-
-    final action = await showRoomCompletionDialog(context);
-    if (!mounted || action == null) return;
-
-    if (action == RoomCompletionAction.viewFullPlan) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const FloorPlanViewerScreen()),
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) =>
-              const FloorPlanViewerScreen(selectContinuationOpening: true),
-        ),
-      );
-    }
+    if (_placingOpening) return;
+    await closeScanRoom(provider);
   }
 
   // ================================================================
-  // PLANO
+  // SESIÓN DEL AMBIENTE
   // ================================================================
 
-  void _closeProject() {
-    Navigator.of(context).popUntil((route) => route.isFirst);
-  }
+  @override
+  String get scanProjectUuid => widget.projectUuid;
 
-  void _openFloorPlan() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const FloorPlanViewerScreen()),
+  @override
+  void startScanRoom(ScannerProvider provider) => provider.startNewRoom();
+
+  @override
+  void showScanError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.redAccent,
+      ),
     );
   }
 }
