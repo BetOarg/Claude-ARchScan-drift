@@ -299,7 +299,7 @@ jobs:
             fi
 
             if ! grep -Eiq \
-              'HTTP[^0-9]*429|Response: 429|rate.?limit|CDN:.*couldn.t be downloaded|timed out|Could not connect|Connection reset' \
+              'HTTP[^0-9]*429|Response: 429|rate.?limit|CDN:.*couldn.t be downloaded|timed out|Could.?n.?t connect|Connection reset|unable to access' \
               ios_configuration.log; then
               echo "Non-transient CocoaPods or iOS configuration error."
               exit 1
