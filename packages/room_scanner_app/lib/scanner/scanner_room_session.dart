@@ -8,6 +8,7 @@ import 'package:room_scanner_core/room_scanner_core.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../l10n/room_type_localization.dart';
+import '../l10n/validation_error_localization.dart';
 import '../providers/floor_plan_provider.dart';
 import '../providers/scanner_provider.dart';
 import '../screens/floor_plan_viewer_screen.dart';
@@ -50,6 +51,25 @@ mixin ScannerRoomSession<T extends StatefulWidget> on State<T> {
 
   /// Muestra un error de escaneo con el estilo propio de la pantalla.
   void showScanError(String message);
+
+  /// Maps a [ValidationResult] error to the localized message, falling back to
+  /// the embedded Spanish string when no error code is available.
+  String localizedValidationError(
+    ValidationResult result,
+    AppLocalizations l10n,
+  ) =>
+      validationErrorMessage(
+        result,
+        l10n,
+        fallback: result.errorMessage ?? l10n.unknownError,
+      );
+
+  /// Localized warning text for a successful [ValidationResult].
+  String? localizedValidationWarning(
+    ValidationResult result,
+    AppLocalizations l10n,
+  ) =>
+      validationWarningMessage(result, l10n);
 
   Future<void> restoreOrStartScanRoom(ScannerProvider provider) async {
     final resumeRoom = activeResumeRoom;
@@ -261,7 +281,7 @@ mixin ScannerRoomSession<T extends StatefulWidget> on State<T> {
           suggestion.z,
         );
         if (!addition.isValid) {
-          showScanError(addition.errorMessage ?? l10n.invalidCorner);
+          showScanError(localizedValidationError(addition, l10n));
           return;
         }
       }

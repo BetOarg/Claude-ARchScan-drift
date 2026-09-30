@@ -273,6 +273,7 @@ class ScannerProvider extends ChangeNotifier {
     if (room == null) {
       return ValidationResult.invalid(
         'No hay un ambiente en curso.',
+        code: ValidationErrorCode.noActiveRoom,
       );
     }
 
@@ -282,6 +283,7 @@ class ScannerProvider extends ChangeNotifier {
     if (points.length < 2) {
       return ValidationResult.invalid(
         'Medí al menos una pared antes de agregar una abertura.',
+        code: ValidationErrorCode.needWallBeforeOpening,
       );
     }
 
@@ -291,6 +293,7 @@ class ScannerProvider extends ChangeNotifier {
             (!sillHeightMeters.isFinite || sillHeightMeters < 0))) {
       return ValidationResult.invalid(
         'La altura debe ser positiva y el antepecho no puede ser negativo.',
+        code: ValidationErrorCode.invalidOpeningHeights,
       );
     }
 
@@ -304,6 +307,8 @@ class ScannerProvider extends ChangeNotifier {
       return ValidationResult.invalid(
         'Ingresá un ancho mínimo de '
         '${_formatLength(0.20)}.',
+        code: ValidationErrorCode.openingTooNarrow,
+        data: {'minWidth': _formatLength(0.20)},
       );
     }
 
@@ -324,6 +329,7 @@ class ScannerProvider extends ChangeNotifier {
         (preferredWallIndex < 0 || preferredWallIndex >= wallCount)) {
       return ValidationResult.invalid(
         'La pared seleccionada no es válida.',
+        code: ValidationErrorCode.invalidWallIndex,
       );
     }
 
@@ -337,6 +343,7 @@ class ScannerProvider extends ChangeNotifier {
     if (wallIndex < 0) {
       return ValidationResult.invalid(
         'No se encontró una pared válida.',
+        code: ValidationErrorCode.noValidWall,
       );
     }
 
@@ -359,6 +366,8 @@ class ScannerProvider extends ChangeNotifier {
           'Los dos puntos de la abertura están demasiado cerca. '
           'Medida detectada: '
           '${_formatLength(measuredWidth)}.',
+          code: ValidationErrorCode.endpointsTooClose,
+          data: {'measuredWidth': _formatLength(measuredWidth)},
         );
       }
     } else {
@@ -371,6 +380,11 @@ class ScannerProvider extends ChangeNotifier {
           '${_formatLength(measuredWidth)}, '
           'pero la pared mide '
           '${_formatLength(wall.length)}.',
+          code: ValidationErrorCode.openingExceedsWall,
+          data: {
+            'openingWidth': _formatLength(measuredWidth),
+            'wallLength': _formatLength(wall.length),
+          },
         );
       }
 
@@ -392,6 +406,7 @@ class ScannerProvider extends ChangeNotifier {
       return ValidationResult.invalid(
         'La abertura se superpone con otra puerta o ventana. '
         'Elegí otra posición sobre la pared.',
+        code: ValidationErrorCode.openingOverlaps,
       );
     }
 
@@ -421,6 +436,7 @@ class ScannerProvider extends ChangeNotifier {
     return ValidationResult.warning(
       'Abertura medida: '
       '${_formatLength(measuredWidth)}.',
+      data: {'measuredWidth': _formatLength(measuredWidth)},
     );
   }
 
@@ -459,6 +475,7 @@ class ScannerProvider extends ChangeNotifier {
   }
 
   String? lastCloseError;
+  ValidationErrorCode? lastCloseErrorCode;
 
   List<WallFeature> _featuresOnContour(List<WallFeature> features, List<ARPoint> points) {
     bool onSegment(ARPoint p, ARPoint a, ARPoint b) {
@@ -486,6 +503,7 @@ class ScannerProvider extends ChangeNotifier {
   /// Valida y cierra el ambiente actual.
   RoomModel? closeCurrentRoom() {
     lastCloseError = null;
+    lastCloseErrorCode = null;
 
     final room =
         _currentRoom;
@@ -493,6 +511,8 @@ class ScannerProvider extends ChangeNotifier {
     if (room == null) {
       lastCloseError =
           'No hay una habitación en curso.';
+      lastCloseErrorCode =
+          ValidationErrorCode.noActiveRoom;
 
       return null;
     }
@@ -506,6 +526,8 @@ class ScannerProvider extends ChangeNotifier {
     if (!closure.isValid) {
       lastCloseError =
           closure.errorMessage;
+      lastCloseErrorCode =
+          closure.errorCode;
 
       return null;
     }
@@ -517,6 +539,8 @@ class ScannerProvider extends ChangeNotifier {
       lastCloseError =
           'El contorno se autointersecta. '
           'Revisa las paredes trazadas.';
+      lastCloseErrorCode =
+          ValidationErrorCode.closeSelfIntersection;
 
       return null;
     }

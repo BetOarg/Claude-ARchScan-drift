@@ -1196,8 +1196,9 @@ class _BasicScannerScreenState extends State<BasicScannerScreen>
         _showMessage(l10n.firstCornerRegistered);
       }
 
-      if (closingDistance == null && result.warningMessage != null) {
-        _showMessage(result.warningMessage!);
+      if (closingDistance == null) {
+        final warning = validationWarningMessage(result, l10n);
+        if (warning != null) _showMessage(warning);
       }
     } catch (error) {
       _scannerAdapter.cancelPendingMeasurement();
@@ -1284,8 +1285,11 @@ class _BasicScannerScreenState extends State<BasicScannerScreen>
       );
       if (!result.isValid) {
         _showValidationError(
-          result.errorMessage ??
-              AppLocalizations.of(context)!.couldNotAttachOpening,
+          validationErrorMessage(
+            result,
+            AppLocalizations.of(context)!,
+            fallback: AppLocalizations.of(context)!.couldNotAttachOpening,
+          ),
         );
       }
     } finally {

@@ -10,11 +10,29 @@ enum ValidationErrorCode {
   insufficientCorners,
   insufficientArea,
   invalidGeometry,
+
+  // Opening placement errors (scanner provider).
+  noActiveRoom,
+  needWallBeforeOpening,
+  invalidOpeningHeights,
+  openingTooNarrow,
+  invalidWallIndex,
+  noValidWall,
+  endpointsTooClose,
+  openingExceedsWall,
+  openingOverlaps,
+  closeSelfIntersection,
 }
 
 class ValidationResult {
   final bool isValid;
   final ValidationErrorCode? errorCode;
+
+  /// Interpolation data for error messages that contain dynamic values.
+  ///
+  /// Keys like `measuredWidth`, `wallLength`, `minWidth` are used by the UI
+  /// to fill ARB placeholders.
+  final Map<String, String> errorData;
 
   /// Kept temporarily for backward compatibility with existing UI callers.
   /// New UI code should map [errorCode] through gen-l10n.
@@ -25,6 +43,7 @@ class ValidationResult {
   const ValidationResult._({
     required this.isValid,
     this.errorCode,
+    this.errorData = const {},
     this.errorMessage,
     this.warningMessage,
     this.suggestedPoint,
@@ -38,17 +57,24 @@ class ValidationResult {
   static ValidationResult invalid(
     String message, {
     ValidationErrorCode? code,
+    Map<String, String> data = const {},
   }) => ValidationResult._(
     isValid: false,
     errorCode: code,
+    errorData: data,
     errorMessage: message,
   );
 
-  static ValidationResult warning(String message, {ARPoint? suggestion}) =>
+  static ValidationResult warning(
+    String message, {
+    ARPoint? suggestion,
+    Map<String, String> data = const {},
+  }) =>
       ValidationResult._(
         isValid: true,
         warningMessage: message,
         suggestedPoint: suggestion,
+        errorData: data,
       );
 }
 

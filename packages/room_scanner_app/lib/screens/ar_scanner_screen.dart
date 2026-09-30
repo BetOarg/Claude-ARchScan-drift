@@ -1126,10 +1126,14 @@ class _ARScannerScreenState extends State<ARScannerScreen>
       return;
     }
 
-    if (result.warningMessage != null) {
+    final warningText = validationWarningMessage(
+      result,
+      AppLocalizations.of(context)!,
+    );
+    if (warningText != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result.warningMessage!),
+          content: Text(warningText),
           backgroundColor: Colors.amber.shade800,
           duration: const Duration(seconds: 2),
         ),
