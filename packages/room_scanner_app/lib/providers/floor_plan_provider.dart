@@ -2273,7 +2273,7 @@ class FloorPlanProvider extends ChangeNotifier {
     var nearestDistance = maximumDistance;
     final count = room.isClosed ? room.points.length : room.points.length - 1;
     for (var index = 0; index < count; index++) {
-      final wall = _WallProjection.create(
+      final wall = WallSegment.between(
         room.points[index], room.points[(index + 1) % room.points.length],
       );
       if (wall == null) continue;
@@ -2299,7 +2299,7 @@ class FloorPlanProvider extends ChangeNotifier {
       candidate = _translateRoomPreservingConnectedOpenings(
         candidate, offsetX: dx, offsetZ: dz,
       );
-      final alignedWall = _WallProjection.create(candidate.points[index],
+      final alignedWall = WallSegment.between(candidate.points[index],
           candidate.points[(index + 1) % candidate.points.length]);
       if (alignedWall == null || !alignedWall.contains(opening.start) ||
           !alignedWall.contains(opening.end)) {
@@ -2308,7 +2308,7 @@ class FloorPlanProvider extends ChangeNotifier {
       // Do not fix one connection by dislodging another.
       final allAnchorsFit = candidate.features.where((f) => f.isConnected).every((f) {
         for (var j = 0; j < count; j++) {
-          final segment = _WallProjection.create(candidate.points[j],
+          final segment = WallSegment.between(candidate.points[j],
               candidate.points[(j + 1) % candidate.points.length]);
           if (segment != null && segment.contains(f.start) && segment.contains(f.end)) {
             return true;
@@ -2453,8 +2453,8 @@ class FloorPlanProvider extends ChangeNotifier {
     final wall = _nearestWallProjection(room, feature);
     if (wall == null) return null;
 
-    final first = wall.projection(feature.start);
-    final second = wall.projection(feature.end);
+    final first = wall.fraction(feature.start);
+    final second = wall.fraction(feature.end);
     return OpeningPlacement(
       widthMeters: GeometryService.calculateDistance(
         feature.start,
@@ -2541,36 +2541,20 @@ class FloorPlanProvider extends ChangeNotifier {
 
     final startT = distanceFromWallStartMeters / wall.length;
     final endT = openingEndDistance / wall.length;
-    for (final existing in room.features) {
-      if (existing.id == featureId ||
-          !wall.contains(existing.start) ||
-          !wall.contains(existing.end)) {
-        continue;
-      }
-
-      final existingStart = math.min(
-            wall.projection(existing.start),
-            wall.projection(existing.end),
-          ) *
-          wall.length;
-      final existingEnd = math.max(
-            wall.projection(existing.start),
-            wall.projection(existing.end),
-          ) *
-          wall.length;
-      const minimumSeparation = 0.02;
-      final overlaps = distanceFromWallStartMeters <
-              existingEnd - minimumSeparation &&
-          existingStart < openingEndDistance - minimumSeparation;
-      if (overlaps) {
-        return const OpeningGeometryUpdateResult.invalid(
-          'La abertura se superpone con otra puerta o ventana.',
-        );
-      }
+    if (wall.overlapsOpening(
+      distanceFromWallStartMeters,
+      openingEndDistance,
+      room.features,
+      separationMeters: 0.02,
+      ignoreFeatureId: featureId,
+    )) {
+      return const OpeningGeometryUpdateResult.invalid(
+        'La abertura se superpone con otra puerta o ventana.',
+      );
     }
 
-    final preservesDirection = wall.projection(feature.start) <=
-        wall.projection(feature.end);
+    final preservesDirection = wall.fraction(feature.start) <=
+        wall.fraction(feature.end);
     final lowerPoint = wall.pointAt(startT);
     final upperPoint = wall.pointAt(endT);
     final updatedStart = preservesDirection ? lowerPoint : upperPoint;
@@ -2614,7 +2598,7 @@ class FloorPlanProvider extends ChangeNotifier {
     return const OpeningGeometryUpdateResult.success();
   }
 
-  _WallProjection? _nearestWallProjection(
+  WallSegment? _nearestWallProjection(
     RoomModel room,
     WallFeature feature,
   ) {
@@ -2626,28 +2610,16 @@ class FloorPlanProvider extends ChangeNotifier {
       y: (feature.start.y + feature.end.y) / 2,
       z: (feature.start.z + feature.end.z) / 2,
     );
-    _WallProjection? nearest;
-    var nearestDistanceSquared = double.infinity;
-
-    for (var index = 0; index < PlanEditGeometry.wallCount(room); index++) {
-      final candidate = _WallProjection.create(
-        points[index],
-        points[(index + 1) % points.length],
-      );
-      if (candidate == null) continue;
-
-      final projected = candidate.pointAt(
-        candidate.projection(midpoint),
-      );
-      final dx = midpoint.x - projected.x;
-      final dz = midpoint.z - projected.z;
-      final distanceSquared = dx * dx + dz * dz;
-      if (distanceSquared < nearestDistanceSquared) {
-        nearestDistanceSquared = distanceSquared;
-        nearest = candidate;
-      }
-    }
-    return nearest;
+    final index = WallSegment.nearestWallIndex(
+      points,
+      PlanEditGeometry.wallCount(room),
+      midpoint,
+    );
+    if (index < 0) return null;
+    return WallSegment.between(
+      points[index],
+      points[(index + 1) % points.length],
+    );
   }
 
   /// Construye la referencia común que utilizarán el plano 2D, Basic Scanner,
@@ -2701,12 +2673,12 @@ class FloorPlanProvider extends ChangeNotifier {
     final room = _completedRooms[index];
     final count = PlanEditGeometry.wallCount(room);
     if (wallIndex < 0 || wallIndex >= count) return invalid;
-    final wall = _WallProjection.create(room.points[wallIndex],
+    final wall = WallSegment.between(room.points[wallIndex],
         room.points[(wallIndex + 1) % room.points.length]);
     if (wall == null || widthMeters > wall.length) return invalid;
     final original = room.features.where((f) => f.id == featureId).firstOrNull;
     if (featureId != null && original == null) return invalid;
-    final startDistance = (wall.projection(location) * wall.length - widthMeters / 2)
+    final startDistance = (wall.fraction(location) * wall.length - widthMeters / 2)
         .clamp(0.0, wall.length - widthMeters).toDouble();
     final lower = wall.pointAt(startDistance / wall.length);
     final upper = wall.pointAt((startDistance + widthMeters) / wall.length);
@@ -2725,9 +2697,9 @@ class FloorPlanProvider extends ChangeNotifier {
     }
     for (final i in affected) {
       final target = _completedRooms[i];
-      _WallProjection? targetWall;
+      WallSegment? targetWall;
       for (var j = 0; j < target.points.length; j++) {
-        final candidate = _WallProjection.create(target.points[j],
+        final candidate = WallSegment.between(target.points[j],
             target.points[(j + 1) % target.points.length]);
         if (candidate != null && candidate.contains(start) && candidate.contains(end)) {
           targetWall = candidate;
@@ -2739,22 +2711,18 @@ class FloorPlanProvider extends ChangeNotifier {
           'La abertura conectada debe permanecer sobre una pared de ambos ambientes.',
         );
       }
-      final lo = math.min(targetWall.projection(start), targetWall.projection(end)) * targetWall.length;
-      final hi = math.max(targetWall.projection(start), targetWall.projection(end)) * targetWall.length;
-      for (final existing in target.features) {
-        if (existing.id == featureId || !targetWall.contains(existing.start) ||
-            !targetWall.contains(existing.end)) {
-          continue;
-        }
-        final a = math.min(targetWall.projection(existing.start),
-            targetWall.projection(existing.end)) * targetWall.length;
-        final b = math.max(targetWall.projection(existing.start),
-            targetWall.projection(existing.end)) * targetWall.length;
-        if (lo < b - 0.000001 && a < hi - 0.000001) {
-          return const OpeningGeometryUpdateResult.invalid(
-            'La abertura se superpone con otra puerta o ventana.',
-          );
-        }
+      final lo = math.min(targetWall.fraction(start), targetWall.fraction(end)) * targetWall.length;
+      final hi = math.max(targetWall.fraction(start), targetWall.fraction(end)) * targetWall.length;
+      if (targetWall.overlapsOpening(
+        lo,
+        hi,
+        target.features,
+        separationMeters: 0.000001,
+        ignoreFeatureId: featureId,
+      )) {
+        return const OpeningGeometryUpdateResult.invalid(
+          'La abertura se superpone con otra puerta o ventana.',
+        );
       }
     }
     final before = List<RoomModel>.from(_completedRooms);
@@ -2986,68 +2954,3 @@ class OpeningGeometryUpdateResult {
 
   const OpeningGeometryUpdateResult.invalid(this.errorMessage)
       : isSuccess = false;}
-
-class _WallProjection {
-  final ARPoint start;
-  final ARPoint end;
-  final double dx;
-  final double dz;
-  final double lengthSquared;
-  final double length;
-
-  const _WallProjection._({
-    required this.start,
-    required this.end,
-    required this.dx,
-    required this.dz,
-    required this.lengthSquared,
-    required this.length,  });
-
-  static _WallProjection? create(ARPoint start, ARPoint end) {
-    final dx = end.x - start.x;
-    final dz = end.z - start.z;
-    final lengthSquared = dx * dx + dz * dz;
-    if (lengthSquared <= 0.000001) return null;
-
-    return _WallProjection._(
-      start: start,
-      end: end,
-      dx: dx,
-      dz: dz,
-      lengthSquared: lengthSquared,
-      length: math.sqrt(lengthSquared),
-    );
-  }
-
-  double projection(ARPoint point) {
-    return (((point.x - start.x) * dx +
-                (point.z - start.z) * dz) /
-            lengthSquared)
-        .clamp(0.0, 1.0)
-        .toDouble();
-  }
-
-  ARPoint pointAt(double t) {
-    return ARPoint(
-      x: start.x + dx * t,
-      y: start.y + (end.y - start.y) * t,
-      z: start.z + dz * t,
-    );
-  }
-
-  bool contains(ARPoint point) {
-    final rawProjection =
-        ((point.x - start.x) * dx +
-                (point.z - start.z) * dz) /
-            lengthSquared;
-    if (rawProjection < -0.01 || rawProjection > 1.01) {
-      return false;
-    }
-
-    final projected = pointAt(rawProjection);
-    final distanceX = point.x - projected.x;
-    final distanceZ = point.z - projected.z;
-    return distanceX * distanceX + distanceZ * distanceZ <=
-        0.0025;
-  }
-}
