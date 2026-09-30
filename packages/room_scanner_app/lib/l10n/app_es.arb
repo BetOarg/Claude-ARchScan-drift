@@ -598,5 +598,8 @@
   "scanWarningOpeningMeasured": "Abertura medida: {measuredWidth}.",
   "@scanWarningOpeningMeasured": {
     "placeholders": { "measuredWidth": { "type": "String" } }
-  }
+  },
+  "planErrorRoomNotFound": "No se encontró el ambiente.",
+  "planErrorInvalidMeasurement": "La medida no es válida.",
+  "planErrorEditCausesConflict": "El cambio genera un cruce, solapamiento o modifica una conexión. Revisá el plano."
 }

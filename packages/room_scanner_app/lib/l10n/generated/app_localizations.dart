@@ -2678,6 +2678,24 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Abertura medida: {measuredWidth}.'**
   String scanWarningOpeningMeasured(String measuredWidth);
+
+  /// No description provided for @planErrorRoomNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'No se encontró el ambiente.'**
+  String get planErrorRoomNotFound;
+
+  /// No description provided for @planErrorInvalidMeasurement.
+  ///
+  /// In es, this message translates to:
+  /// **'La medida no es válida.'**
+  String get planErrorInvalidMeasurement;
+
+  /// No description provided for @planErrorEditCausesConflict.
+  ///
+  /// In es, this message translates to:
+  /// **'El cambio genera un cruce, solapamiento o modifica una conexión. Revisá el plano.'**
+  String get planErrorEditCausesConflict;
 }
 
 class _AppLocalizationsDelegate

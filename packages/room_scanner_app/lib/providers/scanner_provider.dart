@@ -446,10 +446,9 @@ class ScannerProvider extends ChangeNotifier {
     return MeasurementUnits.formatLength(
       meters,
       measurementSystem,
-      metersLabel: 'metros',
-      feetLabel: 'pies',
-      inchesLabel: 'pulgadas',
-      decimalSeparator: ',',
+      metersLabel: 'm',
+      feetLabel: 'ft',
+      inchesLabel: 'in',
     );
   }
   void removeLastPoint() {

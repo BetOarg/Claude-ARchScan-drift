@@ -44,6 +44,12 @@ String validationErrorMessage(
       return l10n.scanErrorOpeningOverlaps;
     case ValidationErrorCode.closeSelfIntersection:
       return l10n.scanErrorCloseSelfIntersection;
+    case ValidationErrorCode.roomNotFound:
+      return l10n.planErrorRoomNotFound;
+    case ValidationErrorCode.invalidMeasurement:
+      return l10n.planErrorInvalidMeasurement;
+    case ValidationErrorCode.editCausesConflict:
+      return l10n.planErrorEditCausesConflict;
     case null:
       return fallback;
   }

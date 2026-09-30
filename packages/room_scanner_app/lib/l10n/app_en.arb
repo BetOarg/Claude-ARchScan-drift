@@ -598,5 +598,8 @@
   "scanWarningOpeningMeasured": "Opening measured: {measuredWidth}.",
   "@scanWarningOpeningMeasured": {
     "placeholders": { "measuredWidth": { "type": "String" } }
-  }
+  },
+  "planErrorRoomNotFound": "Room not found.",
+  "planErrorInvalidMeasurement": "The measurement is not valid.",
+  "planErrorEditCausesConflict": "The change causes an intersection, overlap, or modifies a connection. Review the plan."
 }

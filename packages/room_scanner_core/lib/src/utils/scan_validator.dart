@@ -22,6 +22,11 @@ enum ValidationErrorCode {
   openingExceedsWall,
   openingOverlaps,
   closeSelfIntersection,
+
+  // Plan editing errors (floor plan provider).
+  roomNotFound,
+  invalidMeasurement,
+  editCausesConflict,
 }
 
 class ValidationResult {

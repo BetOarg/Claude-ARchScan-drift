@@ -1476,4 +1476,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String scanWarningOpeningMeasured(String measuredWidth) {
     return 'Opening measured: $measuredWidth.';
   }
+
+  @override
+  String get planErrorRoomNotFound => 'Room not found.';
+
+  @override
+  String get planErrorInvalidMeasurement => 'The measurement is not valid.';
+
+  @override
+  String get planErrorEditCausesConflict =>
+      'The change causes an intersection, overlap, or modifies a connection. Review the plan.';
 }

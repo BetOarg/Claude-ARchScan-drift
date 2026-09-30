@@ -2675,8 +2675,8 @@ class FloorPlanProvider extends ChangeNotifier {
 
 
   String _formatLength(double meters) => MeasurementUnits.formatLength(
-    meters, measurementSystem, metersLabel: 'metros', feetLabel: 'pies',
-    inchesLabel: 'pulgadas', decimalSeparator: ',',
+    meters, measurementSystem, metersLabel: 'm', feetLabel: 'ft',
+    inchesLabel: 'in',
   );
 
   Future<ValidationResult> updateWallLength({
@@ -2684,13 +2684,25 @@ class FloorPlanProvider extends ChangeNotifier {
     required double lengthMeters,
   }) async {
     final room = _completedRooms.where((r) => r.id == roomId).firstOrNull;
-    if (room == null) return ValidationResult.invalid('No se encontró el ambiente.');
+    if (room == null) {
+      return ValidationResult.invalid(
+        'Room not found.',
+        code: ValidationErrorCode.roomNotFound,
+      );
+    }
     final points = PlanEditGeometry.resizeWall(room, wallIndex, lengthMeters);
-    if (points == null) return ValidationResult.invalid('La medida no es válida.');
+    if (points == null) {
+      return ValidationResult.invalid(
+        'Invalid measurement.',
+        code: ValidationErrorCode.invalidMeasurement,
+      );
+    }
     final proposal = previewGeometry(room, points);
     if (proposal.error != null) {
       return ValidationResult.invalid(
-        'El cambio genera un cruce, solapamiento o modifica una conexión. Revisá el plano.');
+        'Edit causes conflict.',
+        code: ValidationErrorCode.editCausesConflict,
+      );
     }
     await applyPlanEdit(proposal);
     return ValidationResult.valid;
