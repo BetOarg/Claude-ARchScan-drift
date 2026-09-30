@@ -205,11 +205,13 @@ jobs:
         working-directory: packages/room_scanner_app
 
       - name: Decode Android Keystore
+        if: ${{ secrets.ANDROID_STORE_PASSWORD != '' }}
         shell: bash
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > packages/room_scanner_app/android/app/release-keystore.jks
 
       - name: Prepare Android release signing
+        if: ${{ secrets.ANDROID_STORE_PASSWORD != '' }}
         shell: bash
         env:
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
@@ -227,9 +229,15 @@ jobs:
           keyPassword=$ANDROID_KEY_PASSWORD
           EOF
 
-      - name: Verify Android Release App Bundle
+      - name: Verify Android Release App Bundle (signed)
+        if: ${{ secrets.ANDROID_STORE_PASSWORD != '' }}
         working-directory: packages/room_scanner_app
         run: flutter build appbundle --release
+
+      - name: Verify Android Debug App Bundle (unsigned)
+        if: ${{ secrets.ANDROID_STORE_PASSWORD == '' }}
+        working-directory: packages/room_scanner_app
+        run: flutter build appbundle --debug
 
   check-ios:
     name: Verify iOS Build
