@@ -167,12 +167,12 @@ class _MeasurementEditorScreenState extends State<MeasurementEditorScreen> {
         const SizedBox(height: 16),
         Text(
           l10n.wallsSection,
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 6),
         Text(
           l10n.selectWallToEdit,
-          style: TextStyle(color: Colors.black54, height: 1.3),
+          style: const TextStyle(color: Colors.black54, height: 1.3),
         ),
         const SizedBox(height: 12),
         ...List.generate(room.points.length, (wallIndex) {
@@ -274,8 +274,7 @@ class _MeasurementEditorScreenState extends State<MeasurementEditorScreen> {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
-          l10n.cornerRange(startIndex, endIndex) +
-              '\n${_formatLength(length, measurementSystem)}',
+          '${l10n.cornerRange(startIndex, endIndex)}\n${_formatLength(length, measurementSystem)}',
         ),
         trailing: IconButton(
           tooltip: l10n.editWallTitle(wallIndex + 1),
@@ -417,7 +416,7 @@ class _MeasurementEditorScreenState extends State<MeasurementEditorScreen> {
                     const SizedBox(height: 12),
                     Text(
                       l10n.wallLengthChangeNotice,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.black54,
                         fontSize: 12,
                         height: 1.35,

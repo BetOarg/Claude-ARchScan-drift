@@ -1072,7 +1072,7 @@ class _ARScannerScreenState extends State<ARScannerScreen>
 
   Future<void> _onCapturePressed(ScannerProvider provider) async {
     if (_placingOpening) return;
-    HapticFeedback.lightImpact();
+    await HapticFeedback.lightImpact();
 
     if (!_isContinuationCalibrated) {
       await _captureContinuationEndpoint();
@@ -1213,8 +1213,9 @@ class _ARScannerScreenState extends State<ARScannerScreen>
     if (_placingOpening ||
         !_isContinuationCalibrated ||
         room == null ||
-        room.points.length < 2)
+        room.points.length < 2) {
       return;
+    }
     setState(() {
       _placingOpening = true;
       _pendingFeatureStart = null;
@@ -1231,8 +1232,9 @@ class _ARScannerScreenState extends State<ARScannerScreen>
       );
       if (!mounted ||
           placement == null ||
-          !identical(provider.currentRoom, room))
+          !identical(provider.currentRoom, room)) {
         return;
+      }
       final result = provider.addFeatureToCurrentRoom(
         type,
         placement.location,
@@ -1259,10 +1261,11 @@ class _ARScannerScreenState extends State<ARScannerScreen>
           ),
         );
     } finally {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _placingOpening = false;
         });
+      }
     }
   }
 

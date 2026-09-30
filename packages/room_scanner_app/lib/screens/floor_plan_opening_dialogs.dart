@@ -216,10 +216,11 @@ mixin _OpeningDialogs on State<FloorPlanViewerScreen>, _PlanWallEditing {
         if (mounted) _planError(PlanEditError.invalid);
         return;
       }
-      if (mounted)
+      if (mounted) {
         setState(() {
           _selectedFeatureId = null;
         });
+      }
       return;
     }
 

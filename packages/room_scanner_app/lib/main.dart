@@ -255,7 +255,7 @@ class _RoomScannerBootstrapState
           },
         ),
       ],
-      child: RoomScannerApp(),
+      child: const RoomScannerApp(),
     );
   }
 }

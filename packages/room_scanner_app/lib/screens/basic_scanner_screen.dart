@@ -997,7 +997,7 @@ class _BasicScannerScreenState extends State<BasicScannerScreen>
     if (_processing) {
       return;
     }
-    HapticFeedback.lightImpact();
+    await HapticFeedback.lightImpact();
 
     if (provider.currentPointsCount == 0) {
       if (activeContinuationReference != null) {
@@ -1184,7 +1184,9 @@ class _BasicScannerScreenState extends State<BasicScannerScreen>
       );
       if (!mounted ||
           placement == null ||
-          !identical(provider.currentRoom, room)) return;
+          !identical(provider.currentRoom, room)) {
+        return;
+      }
       final result = provider.addFeatureToCurrentRoom(
         type,
         placement.location,
@@ -1203,10 +1205,11 @@ class _BasicScannerScreenState extends State<BasicScannerScreen>
         );
       }
     } finally {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _processing = false;
         });
+      }
     }
   }
 

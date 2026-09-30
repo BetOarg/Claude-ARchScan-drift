@@ -832,7 +832,7 @@ mixin _RoomDialogs on State<FloorPlanViewerScreen>, _PlanWallEditing {
                                           _RoomListActionType.editMeasurements,
                                       child: ListTile(
                                         dense: true,
-                                        leading: Icon(
+                                        leading: const Icon(
                                           Icons.straighten_outlined,
                                         ),
                                         title: Text(
@@ -844,7 +844,7 @@ mixin _RoomDialogs on State<FloorPlanViewerScreen>, _PlanWallEditing {
                                       value: _RoomListActionType.rename,
                                       child: ListTile(
                                         dense: true,
-                                        leading: Icon(Icons.edit_outlined),
+                                        leading: const Icon(Icons.edit_outlined),
                                         title: Text(localizations.rename),
                                       ),
                                     ),

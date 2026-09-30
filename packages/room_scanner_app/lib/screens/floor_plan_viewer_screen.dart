@@ -105,7 +105,7 @@ class _FloorPlanViewerScreenState extends State<FloorPlanViewerScreen>
     } on FormatException catch (error) {
       if (mounted) {
         _showMessage(
-          l10n.roomPlanCaptureFailed('${error.message}'),
+          l10n.roomPlanCaptureFailed(error.message),
           error: true,
         );
       }
@@ -512,8 +512,8 @@ class _FloorPlanViewerScreenState extends State<FloorPlanViewerScreen>
         return AlertDialog(
           title: Row(
             children: [
-              Icon(Icons.grid_view_rounded),
-              SizedBox(width: 10),
+              const Icon(Icons.grid_view_rounded),
+              const SizedBox(width: 10),
               Expanded(child: Text(localizations.organizeRooms)),
             ],
           ),
@@ -724,7 +724,7 @@ class _FloorPlanViewerScreenState extends State<FloorPlanViewerScreen>
                         value: _FloorPlanAction.importProject,
                         child: ListTile(
                           dense: true,
-                          leading: Icon(Icons.file_upload),
+                          leading: const Icon(Icons.file_upload),
                           title: Text(localizations.importProject),
                         ),
                       ),
@@ -802,7 +802,7 @@ class _FloorPlanViewerScreenState extends State<FloorPlanViewerScreen>
                               featureSelection.feature.isConnected) {
                             return;
                           }
-                          _showFeatureMenu(featureSelection);
+                          await _showFeatureMenu(featureSelection);
                           return;
                         }
 
@@ -813,8 +813,9 @@ class _FloorPlanViewerScreenState extends State<FloorPlanViewerScreen>
                         if (await _selectPlanElement(
                           details.localPosition,
                           provider.completedRooms,
-                        ))
+                        )) {
                           return;
+                        }
                         if (!mounted) return;
 
                         final planePoint = _inverseTransform(
@@ -827,7 +828,7 @@ class _FloorPlanViewerScreenState extends State<FloorPlanViewerScreen>
                           return;
                         }
 
-                        _showAddFeatureMenu(
+                        await _showAddFeatureMenu(
                           roomId: roomId,
                           location: planePoint,
                         );

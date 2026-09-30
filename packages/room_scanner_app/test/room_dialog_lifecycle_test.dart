@@ -57,10 +57,10 @@ void main() {
                 value: settings,
               ),
             ],
-            child: MaterialApp(
+            child: const MaterialApp(
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
-              home: const MeasurementEditorScreen(roomId: 'room'),
+              home: MeasurementEditorScreen(roomId: 'room'),
             ),
           ),
         );
@@ -135,11 +135,11 @@ void main() {
                 value: settings,
               ),
             ],
-            child: MaterialApp(
-              locale: const Locale('en'),
+            child: const MaterialApp(
+              locale: Locale('en'),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
-              home: const FloorPlanViewerScreen(),
+              home: FloorPlanViewerScreen(),
             ),
           ),
         );

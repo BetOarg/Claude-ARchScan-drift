@@ -729,7 +729,7 @@ class FloorPlanPainter extends CustomPainter {
   }
 
   String _openingDimensionLabelForId(RoomModel room, String dimensionId) {
-    final marker = ':opening:';
+    const marker = ':opening:';
     final markerIndex = dimensionId.indexOf(marker);
     if (markerIndex < 0) {
       return '';
