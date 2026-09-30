@@ -70,10 +70,12 @@ class DriftProjectRepository implements ProjectRepository {
 
     final roomDatabaseIds = roomRows.map((room) => room.id).toList();
     final pointRows = await (_db.select(_db.roomPoints)
-          ..where((p) => p.roomId.isIn(roomDatabaseIds)))
+          ..where((p) => p.roomId.isIn(roomDatabaseIds))
+          ..orderBy([(t) => OrderingTerm.asc(t.id)]))
         .get();
     final featureRows = await (_db.select(_db.wallFeaturesTable)
-          ..where((f) => f.roomId.isIn(roomDatabaseIds)))
+          ..where((f) => f.roomId.isIn(roomDatabaseIds))
+          ..orderBy([(t) => OrderingTerm.asc(t.id)]))
         .get();
 
     final pointsByRoom = <int, List<ARPoint>>{};
