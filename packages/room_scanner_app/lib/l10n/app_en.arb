@@ -594,6 +594,7 @@
   },
   "scanErrorOpeningOverlaps": "The opening overlaps with another door or window. Choose a different position on the wall.",
   "scanErrorCloseSelfIntersection": "The contour self-intersects. Review the traced walls.",
+  "defaultProjectName": "My Complete Home",
   "scanWarningOpeningMeasured": "Opening measured: {measuredWidth}.",
   "@scanWarningOpeningMeasured": {
     "placeholders": { "measuredWidth": { "type": "String" } }

@@ -594,6 +594,7 @@
   },
   "scanErrorOpeningOverlaps": "La abertura se superpone con otra puerta o ventana. Elegí otra posición sobre la pared.",
   "scanErrorCloseSelfIntersection": "El contorno se autointersecta. Revisá las paredes trazadas.",
+  "defaultProjectName": "Mi Casa Completa",
   "scanWarningOpeningMeasured": "Abertura medida: {measuredWidth}.",
   "@scanWarningOpeningMeasured": {
     "placeholders": { "measuredWidth": { "type": "String" } }

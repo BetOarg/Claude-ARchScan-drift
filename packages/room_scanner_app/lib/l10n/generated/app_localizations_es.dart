@@ -1481,6 +1481,9 @@ class AppLocalizationsEs extends AppLocalizations {
       'El contorno se autointersecta. Revisá las paredes trazadas.';
 
   @override
+  String get defaultProjectName => 'Mi Casa Completa';
+
+  @override
   String scanWarningOpeningMeasured(String measuredWidth) {
     return 'Abertura medida: $measuredWidth.';
   }

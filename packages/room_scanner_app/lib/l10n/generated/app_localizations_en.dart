@@ -1470,6 +1470,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'The contour self-intersects. Review the traced walls.';
 
   @override
+  String get defaultProjectName => 'My Complete Home';
+
+  @override
   String scanWarningOpeningMeasured(String measuredWidth) {
     return 'Opening measured: $measuredWidth.';
   }

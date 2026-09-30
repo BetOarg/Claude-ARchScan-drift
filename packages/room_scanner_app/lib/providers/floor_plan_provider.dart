@@ -155,7 +155,11 @@ class FloorPlanProvider extends ChangeNotifier {
 
   String? _projectUuid;
 
-  String _projectName = 'Mi Casa Completa';
+  /// Nombre de proyecto por defecto. Los callers que tengan acceso a l10n
+  /// deberían pasar el nombre localizado a [clearProject].
+  static const String defaultProjectName = 'Mi Casa Completa';
+
+  String _projectName = defaultProjectName;
 
   final List<RoomModel> _completedRooms = [];
 
@@ -2696,12 +2700,12 @@ class FloorPlanProvider extends ChangeNotifier {
   // RESET
   // ===========================================================================
 
-  void clearProject() {
+  void clearProject({String? defaultName}) {
     _projectUuid = null;
     _completedRooms.clear();
     _clearTransformHistory();
     _projectName =
-        'Mi Casa Completa';
+        defaultName ?? defaultProjectName;
 
     notifyListeners();
   }

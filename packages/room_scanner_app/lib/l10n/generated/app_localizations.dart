@@ -2667,6 +2667,12 @@ abstract class AppLocalizations {
   /// **'El contorno se autointersecta. Revisá las paredes trazadas.'**
   String get scanErrorCloseSelfIntersection;
 
+  /// No description provided for @defaultProjectName.
+  ///
+  /// In es, this message translates to:
+  /// **'Mi Casa Completa'**
+  String get defaultProjectName;
+
   /// No description provided for @scanWarningOpeningMeasured.
   ///
   /// In es, this message translates to:
