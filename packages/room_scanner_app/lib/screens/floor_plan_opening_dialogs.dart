@@ -808,7 +808,7 @@ mixin _OpeningDialogs on State<FloorPlanViewerScreen>, _PlanWallEditing {
     );
   }
 
-  _showAddFeatureMenu({
+  Future<void> _showAddFeatureMenu({
     required String roomId,
     required ARPoint location,
   }) async {

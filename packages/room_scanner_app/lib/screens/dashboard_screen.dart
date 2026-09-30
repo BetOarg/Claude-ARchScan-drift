@@ -34,7 +34,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final localizations = AppLocalizations.of(context)!;
     final controller = TextEditingController();
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(
@@ -200,7 +200,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     Navigator.push(
       context,
-      MaterialPageRoute(
+      MaterialPageRoute<void>(
         builder: (_) => const FloorPlanViewerScreen(),
       ),
     );

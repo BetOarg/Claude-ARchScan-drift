@@ -77,7 +77,9 @@ class _ARScannerScreenState extends State<ARScannerScreen>
   // CONTROLADORES AR
   // ================================================================
 
+  // ignore: unused_field — retained for AR lifecycle management.
   ARSessionManager? _arSessionManager;
+  // ignore: unused_field — retained for AR lifecycle management.
   ARObjectManager? _arObjectManager;
   static const Duration _arInitializationTimeout = Duration(seconds: 15);
   Future<void> _arLifecycleTask = Future<void>.value();
@@ -97,7 +99,7 @@ class _ARScannerScreenState extends State<ARScannerScreen>
   /// Eso ahora pertenece al Scanner Engine.
   final ARScannerAdapter _arScannerAdapter = ARScannerAdapter();
 
-  // Posición actual estimada del dispositivo/cámara.
+  // ignore: unused_field — updated by AR session, read in future AR features.
   vector.Vector3 _currentCameraPosition = vector.Vector3(0, 0, 0);
 
   bool _permissionsGranted = false;
@@ -325,7 +327,7 @@ class _ARScannerScreenState extends State<ARScannerScreen>
     _arInitializationTimer?.cancel();
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
+      MaterialPageRoute<void>(
         builder: (_) => BasicScannerScreen(
           projectUuid: widget.projectUuid,
           projectName: widget.projectName,

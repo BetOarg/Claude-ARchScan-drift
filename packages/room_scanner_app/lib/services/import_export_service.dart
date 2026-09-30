@@ -125,7 +125,7 @@ class ImportExportService {
     final offsetX = (width - (sourceSize.width * scale)) / 2;
     final offsetY = (height - (sourceSize.height * scale)) / 2;
     final recorder = ui.PictureRecorder();
-    final canvas = ui.Canvas(recorder)
+    ui.Canvas(recorder)
       ..drawColor(const ui.Color(0xFFFFFFFF), ui.BlendMode.src)
       ..translate(offsetX, offsetY)
       ..scale(scale)
@@ -152,7 +152,7 @@ class ImportExportService {
       final jsonName = PlanExportBuilder.buildJsonFileName(projectName);
       final baseName = jsonName.substring(0, jsonName.length - 5);
       final extension = jpeg ? 'jpg' : 'png';
-      return _deliverFile(
+      return await _deliverFile(
         fileName: '$baseName.$extension',
         bytes: bytes,
         allowedExtension: extension,

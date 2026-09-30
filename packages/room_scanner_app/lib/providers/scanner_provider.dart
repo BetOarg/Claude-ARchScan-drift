@@ -314,7 +314,7 @@ class ScannerProvider extends ChangeNotifier {
 
     final referencePoint = isCameraMeasurement
         ? ARPoint(
-            x: (location.x + endLocation!.x) / 2.0,
+            x: (location.x + endLocation.x) / 2.0,
             y: (location.y + endLocation.y) / 2.0,
             z: (location.z + endLocation.z) / 2.0,
           )
@@ -355,7 +355,7 @@ class ScannerProvider extends ChangeNotifier {
 
     if (isCameraMeasurement) {
       final firstT = wall.fraction(location);
-      final secondT = wall.fraction(endLocation!);
+      final secondT = wall.fraction(endLocation);
 
       startT = math.min(firstT, secondT);
       endT = math.max(firstT, secondT);

@@ -11,7 +11,6 @@ import 'package:room_scanner_core/room_scanner_core.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../l10n/validation_error_localization.dart';
-import '../l10n/room_type_localization.dart';
 import '../providers/floor_plan_provider.dart';
 import '../providers/measurement_settings_provider.dart';
 import '../providers/scanner_provider.dart';
@@ -801,60 +800,6 @@ class _BasicScannerScreenState extends State<BasicScannerScreen>
     );
   }
 
-  Future<void> _showRoomTypeSelector(ScannerProvider provider) async {
-    final l10n = AppLocalizations.of(context)!;
-
-    final selected = await showModalBottomSheet<RoomType>(
-      context: context,
-      isScrollControlled: true,
-      builder: (bottomSheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.roomType,
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: RoomType.values.length,
-                    itemBuilder: (context, index) {
-                      final type = RoomType.values[index];
-
-                      final selected = provider.selectedType == type;
-
-                      return ListTile(
-                        leading: Icon(
-                          selected ? Icons.check_circle : Icons.circle_outlined,
-                          color: selected ? Colors.blueAccent : null,
-                        ),
-                        title: Text(type.localizedName(l10n)),
-                        onTap: () {
-                          Navigator.pop(bottomSheetContext, type);
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-    if (selected == null || !mounted) {
-      return;
-    }
-
-    provider.setRoomType(selected);
-  }
-
   Widget _hudIconButton({
     required IconData icon,
     required String tooltip,
@@ -874,8 +819,6 @@ class _BasicScannerScreenState extends State<BasicScannerScreen>
   }
 
   Widget _buildBottomPanel(ScannerProvider provider) {
-    final count = provider.currentPointsCount;
-
     return Positioned(
       left: 10,
       right: 10,
@@ -935,39 +878,6 @@ class _BasicScannerScreenState extends State<BasicScannerScreen>
       case BasicAppMode.window:
         return const Color(0xFFD500F9);
     }
-  }
-
-  Widget _buildProgressIndicator(int count) {
-    final l10n = AppLocalizations.of(context)!;
-
-    return Row(
-      children: [
-        const Icon(Icons.polyline, color: Colors.white70, size: 18),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                count == 0 ? l10n.traceStarted : l10n.cornerRegistered(count),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                count < 3
-                    ? l10n.needThreeCornersToClose
-                    : l10n.canContinueOrClose,
-                style: const TextStyle(color: Colors.white54, fontSize: 11),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
   }
 
   Widget _buildUndoButton(ScannerProvider provider) =>
@@ -1766,47 +1676,6 @@ class _BasicScannerScreenState extends State<BasicScannerScreen>
       feetInput: feetController.text,
       inchesInput: inchesController.text,
     );
-  }
-
-  void _convertLengthControllers({
-    required MeasurementSystem from,
-    required MeasurementSystem to,
-    required TextEditingController metricController,
-    required TextEditingController feetController,
-    required TextEditingController inchesController,
-  }) {
-    if (from == to) {
-      return;
-    }
-
-    if (to == MeasurementSystem.imperial) {
-      final meters = MeasurementUnits.metricInputToMeters(
-        metricController.text,
-      );
-
-      if (meters == null) {
-        feetController.clear();
-        inchesController.clear();
-        return;
-      }
-
-      final imperial = MeasurementUnits.metersToFeetAndInches(meters);
-
-      feetController.text = imperial.feet.toString();
-      inchesController.text = _formatUnitNumber(imperial.inches);
-      return;
-    }
-
-    final meters = MeasurementUnits.imperialInputToMeters(
-      feetInput: feetController.text,
-      inchesInput: inchesController.text,
-    );
-
-    if (meters == null) {
-      metricController.clear();
-      return;
-    }
-    metricController.text = _formatUnitNumber(meters);
   }
 
   String _formatUnitNumber(double value) {
