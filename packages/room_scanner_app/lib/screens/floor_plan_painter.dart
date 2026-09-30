@@ -143,7 +143,7 @@ class _AlignmentPreviewPainter extends CustomPainter {
     }
 
     final fixedPaint = Paint()
-      ..color = const Color(0xFF7B8492).withOpacity(0.55)
+      ..color = const Color(0xFF7B8492).withValues(alpha: 0.55)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
     final currentPaint = Paint()
@@ -222,7 +222,7 @@ class FloorPlanPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     final roomFill = Paint()
-      ..color = const Color(0xFF448AFF).withOpacity(0.10)
+      ..color = const Color(0xFF448AFF).withValues(alpha: 0.10)
       ..style = PaintingStyle.fill;
 
     final pointPaint = Paint()
@@ -548,7 +548,7 @@ class FloorPlanPainter extends CustomPainter {
     }
     _occupiedLabelRects.add(backgroundRect.inflate(2));
     final backgroundPaint = Paint()
-      ..color = Colors.white.withOpacity(0.86)
+      ..color = Colors.white.withValues(alpha: 0.86)
       ..style = PaintingStyle.fill;
 
     canvas.drawRRect(
@@ -928,7 +928,7 @@ class FloorPlanPainter extends CustomPainter {
 
       if (continuationSelectionMode && feature.isConnected) {
         final unavailablePaint = Paint()
-          ..color = Colors.grey.withOpacity(0.35)
+          ..color = Colors.grey.withValues(alpha: 0.35)
           ..strokeWidth = 5.0
           ..style = PaintingStyle.stroke;
         canvas.drawLine(start, end, unavailablePaint);

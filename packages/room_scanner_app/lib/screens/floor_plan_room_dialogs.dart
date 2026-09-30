@@ -500,7 +500,7 @@ mixin _RoomDialogs on State<FloorPlanViewerScreen>, _PlanWallEditing {
                   ),
                   const SizedBox(height: 18),
                   DropdownButtonFormField<String>(
-                    value: selectedRoomId,
+                    initialValue: selectedRoomId,
                     decoration: InputDecoration(
                       labelText: localizations.selectedRoom,
                       border: const OutlineInputBorder(),
@@ -543,7 +543,7 @@ mixin _RoomDialogs on State<FloorPlanViewerScreen>, _PlanWallEditing {
                   ),
                   const SizedBox(height: 14),
                   DropdownButtonFormField<String>(
-                    value: targetRoomId,
+                    initialValue: targetRoomId,
                     decoration: InputDecoration(
                       labelText: localizations.roomToJoin,
                       border: const OutlineInputBorder(),
@@ -570,7 +570,7 @@ mixin _RoomDialogs on State<FloorPlanViewerScreen>, _PlanWallEditing {
                   ),
                   const SizedBox(height: 14),
                   DropdownButtonFormField<double>(
-                    value: movementStep,
+                    initialValue: movementStep,
                     decoration: InputDecoration(
                       labelText: localizations.movementDistance,
                       border: const OutlineInputBorder(),

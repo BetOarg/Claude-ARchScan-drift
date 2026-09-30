@@ -115,7 +115,7 @@ class _MeasurementEditorScreenState extends State<MeasurementEditorScreen> {
           '${rooms.length}-'
           '$selectedIndex',
         ),
-        value: selectedIndex,
+        initialValue: selectedIndex,
         isExpanded: true,
         decoration: InputDecoration(
           labelText: AppLocalizations.of(context)!.selectedRoom,

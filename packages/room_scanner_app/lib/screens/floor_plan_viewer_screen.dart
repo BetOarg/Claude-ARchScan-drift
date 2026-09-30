@@ -952,7 +952,7 @@ class _FloorPlanViewerScreenState extends State<FloorPlanViewerScreen>
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.72),
+                          color: Colors.black.withValues(alpha: 0.72),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
