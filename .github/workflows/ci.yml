@@ -204,14 +204,27 @@ jobs:
         run: flutter test
         working-directory: packages/room_scanner_app
 
+      - name: Check signing secrets availability
+        id: signing
+        shell: bash
+        env:
+          HAS_SECRETS: ${{ secrets.ANDROID_STORE_PASSWORD }}
+        run: |
+          if [ -n "$HAS_SECRETS" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Android signing secrets not configured — building debug APK instead of release."
+          fi
+
       - name: Decode Android Keystore
-        if: ${{ secrets.ANDROID_STORE_PASSWORD != '' }}
+        if: steps.signing.outputs.available == 'true'
         shell: bash
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > packages/room_scanner_app/android/app/release-keystore.jks
 
       - name: Prepare Android release signing
-        if: ${{ secrets.ANDROID_STORE_PASSWORD != '' }}
+        if: steps.signing.outputs.available == 'true'
         shell: bash
         env:
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
@@ -230,12 +243,12 @@ jobs:
           EOF
 
       - name: Verify Android Release App Bundle (signed)
-        if: ${{ secrets.ANDROID_STORE_PASSWORD != '' }}
+        if: steps.signing.outputs.available == 'true'
         working-directory: packages/room_scanner_app
         run: flutter build appbundle --release
 
       - name: Verify Android Debug App Bundle (unsigned)
-        if: ${{ secrets.ANDROID_STORE_PASSWORD == '' }}
+        if: steps.signing.outputs.available != 'true'
         working-directory: packages/room_scanner_app
         run: flutter build appbundle --debug
 
