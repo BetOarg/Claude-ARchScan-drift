@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-ARchScan utiliza Drift sobre SQLite como backend de persistencia local en la rama de migración. La aplicación mantiene una interfaz ProjectRepository, de modo que la capa de UI y dominio no depende directamente de SQLite.
+ARchScan utiliza Drift sobre SQLite como backend de persistencia local (migración fusionada en main mediante el PR #1). La aplicación mantiene una interfaz ProjectRepository, de modo que la capa de UI y dominio no depende directamente de SQLite.
 
 La persistencia sigue siendo deliberadamente local: no hay sincronización con servidor ni cuentas de usuario.
 
@@ -44,6 +44,13 @@ Antes de publicar una compilación que utilice Drift, debe determinarse si exist
 - Si existen instalaciones reales con datos anteriores, la entrega debe incluir una migración explícita o una ruta de importación/recuperación mediante JSON antes de eliminar definitivamente el backend anterior.
 
 No se debe asumir que un cambio de backend conserva automáticamente una base de datos instalada.
+
+### Decisión (2026-09-29)
+
+El responsable del producto confirmó que ninguna compilación con persistencia Isar llegó a usuarios reales. Por lo tanto:
+- no se implementa una migración de datos Isar → Drift;
+- Isar se eliminó por completo del código, las dependencias y la generación de código;
+- la primera versión distribuida arranca con el esquema Drift schemaVersion = 1.
 
 ## Próximo endurecimiento
 
