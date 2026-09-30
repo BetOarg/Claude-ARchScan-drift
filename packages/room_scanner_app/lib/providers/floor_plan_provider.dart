@@ -981,7 +981,7 @@ class FloorPlanProvider extends ChangeNotifier {
       final first = byId[wall.firstRoomId]!;
       final second = byId[wall.secondRoomId]!;
       // Coincident legacy scans are not assembled rooms.
-      if (!_polygonsHaveInteriorOverlap(first.points, second.points)) {
+      if (!PolygonOverlap.interiorsOverlap(first.points, second.points)) {
         connect(first.id, second.id);
       }
     }
@@ -994,7 +994,7 @@ class FloorPlanProvider extends ChangeNotifier {
           secondIndex++) {
         final first = before[firstIndex];
         final second = before[secondIndex];
-        if (!_polygonsHaveInteriorOverlap(first.points, second.points) &&
+        if (!PolygonOverlap.interiorsOverlap(first.points, second.points) &&
             _roomsAreVisuallyAttached(first, second)) {
           connect(first.id, second.id);
         }
@@ -1071,7 +1071,7 @@ class FloorPlanProvider extends ChangeNotifier {
       for (var index = 0;
           index < PlanEditGeometry.wallCount(room);
           index++) {
-        if (_distanceSquaredToSegment(
+        if (PolygonOverlap.distanceSquaredToSegment(
               point,
               room.points[index],
               room.points[(index + 1) % room.points.length],
@@ -1327,7 +1327,7 @@ class FloorPlanProvider extends ChangeNotifier {
     final hasOverlap = movedRoomIndex == -1 ||
         _completedRooms.indexed.any((entry) {
           if (entry.$1 == movedRoomIndex) return false;
-          return _polygonsHaveInteriorOverlap(
+          return PolygonOverlap.interiorsOverlap(
             _completedRooms[movedRoomIndex].points,
             entry.$2.points,
           );
@@ -1421,7 +1421,7 @@ class FloorPlanProvider extends ChangeNotifier {
     final roomIndex = _completedRooms.indexWhere((room) => room.id == roomId);
     final invalid = roomIndex == -1 || _completedRooms.indexed.any((entry) {
       if (entry.$1 == roomIndex) return false;
-      return _polygonsHaveInteriorOverlap(
+      return PolygonOverlap.interiorsOverlap(
         _completedRooms[roomIndex].points,
         entry.$2.points,
       );
@@ -1742,8 +1742,8 @@ class FloorPlanProvider extends ChangeNotifier {
             continue;
           }
 
-          final sourceCenter = _roomCenter(sourceRoom);
-          final targetCenter = _roomCenter(targetRoom);
+          final sourceCenter = PolygonOverlap.centroid(sourceRoom.points);
+          final targetCenter = PolygonOverlap.centroid(targetRoom.points);
           final cosine = math.cos(rotationRadians);
           final sine = math.sin(rotationRadians);
           final relativeCenterX = sourceCenter.x - sourceMidX;
@@ -1901,7 +1901,7 @@ class FloorPlanProvider extends ChangeNotifier {
         if (connectedIds.contains(fixedRoom.id)) {
           continue;
         }
-        if (_polygonsHaveInteriorOverlap(
+        if (PolygonOverlap.interiorsOverlap(
           transformedRoom.points,
           fixedRoom.points,
         )) {
@@ -1910,176 +1910,6 @@ class FloorPlanProvider extends ChangeNotifier {
       }
     }
     return false;
-  }
-
-  bool _polygonsHaveInteriorOverlap(
-    List<ARPoint> first,
-    List<ARPoint> second,
-  ) {
-    if (first.length < 3 || second.length < 3) {
-      return false;
-    }
-
-    for (var firstIndex = 0;
-        firstIndex < first.length;
-        firstIndex++) {
-      final firstStart = first[firstIndex];
-      final firstEnd = first[(firstIndex + 1) % first.length];
-      for (var secondIndex = 0;
-          secondIndex < second.length;
-          secondIndex++) {
-        final secondStart = second[secondIndex];
-        final secondEnd = second[(secondIndex + 1) % second.length];
-        if (_segmentsCrossProperly(
-          firstStart,
-          firstEnd,
-          secondStart,
-          secondEnd,
-        )) {
-          return true;
-        }
-      }
-    }
-
-    if (first.any((point) => _pointStrictlyInsidePolygon(point, second)) ||
-        second.any((point) => _pointStrictlyInsidePolygon(point, first))) {
-      return true;
-    }
-
-    for (var index = 0; index < first.length; index++) {
-      final start = first[index];
-      final end = first[(index + 1) % first.length];
-      final midpoint = ARPoint(
-        x: (start.x + end.x) / 2,
-        y: (start.y + end.y) / 2,
-        z: (start.z + end.z) / 2,
-      );
-      if (_pointStrictlyInsidePolygon(midpoint, second)) {
-        return true;
-      }
-    }
-
-    for (var index = 0; index < second.length; index++) {
-      final start = second[index];
-      final end = second[(index + 1) % second.length];
-      final midpoint = ARPoint(
-        x: (start.x + end.x) / 2,
-        y: (start.y + end.y) / 2,
-        z: (start.z + end.z) / 2,
-      );
-      if (_pointStrictlyInsidePolygon(midpoint, first)) {
-        return true;
-      }
-    }
-
-    return _pointStrictlyInsidePolygon(_roomPointsCenter(first), second) ||
-        _pointStrictlyInsidePolygon(_roomPointsCenter(second), first);
-  }
-
-  bool _segmentsCrossProperly(
-    ARPoint firstStart,    ARPoint firstEnd,
-    ARPoint secondStart,
-    ARPoint secondEnd,
-  ) {
-    final firstSideStart =
-        _crossProduct(firstStart, firstEnd, secondStart);
-    final firstSideEnd =
-        _crossProduct(firstStart, firstEnd, secondEnd);
-    final secondSideStart =
-        _crossProduct(secondStart, secondEnd, firstStart);
-    final secondSideEnd =
-        _crossProduct(secondStart, secondEnd, firstEnd);
-    const tolerance = 0.000001;    return firstSideStart * firstSideEnd < -tolerance &&
-        secondSideStart * secondSideEnd < -tolerance;
-  }
-
-  bool _pointStrictlyInsidePolygon(
-    ARPoint point,
-    List<ARPoint> polygon,
-  ) {
-    const boundaryToleranceSquared = 0.000001;
-    var inside = false;
-    for (var index = 0; index < polygon.length; index++) {
-      final start = polygon[index];
-      final end = polygon[(index + 1) % polygon.length];
-      if (_distanceSquaredToSegment(point, start, end) <=
-          boundaryToleranceSquared) {
-        return false;
-      }
-      final crossesRay = (start.z > point.z) != (end.z > point.z);
-      if (!crossesRay) {
-        continue;
-      }
-      final crossingX = start.x +
-          (point.z - start.z) *
-              (end.x - start.x) /
-              (end.z - start.z);
-      if (crossingX > point.x) {
-        inside = !inside;
-      }
-    }
-    return inside;
-  }
-
-  double _crossProduct(ARPoint start, ARPoint end, ARPoint point) {
-    return (end.x - start.x) * (point.z - start.z) -
-        (end.z - start.z) * (point.x - start.x);
-  }
-
-  double _distanceSquaredToSegment(
-    ARPoint point,    ARPoint start,
-    ARPoint end,
-  ) {
-    final dx = end.x - start.x;
-    final dz = end.z - start.z;
-    final lengthSquared = dx * dx + dz * dz;
-    if (lengthSquared <= 0.000001) {
-      final pointDx = point.x - start.x;
-      final pointDz = point.z - start.z;
-      return pointDx * pointDx + pointDz * pointDz;
-    }
-    final projection = (((point.x - start.x) * dx +
-                (point.z - start.z) * dz) /
-            lengthSquared)
-        .clamp(0.0, 1.0)
-        .toDouble();
-    final projectedX = start.x + dx * projection;
-    final projectedZ = start.z + dz * projection;
-    final distanceX = point.x - projectedX;
-    final distanceZ = point.z - projectedZ;
-    return distanceX * distanceX + distanceZ * distanceZ;
-  }
-
-  ARPoint _roomPointsCenter(List<ARPoint> points) {
-    final totalX = points.fold<double>(
-      0.0,
-      (sum, point) => sum + point.x,
-    );
-    final totalZ = points.fold<double>(
-      0.0,
-      (sum, point) => sum + point.z,
-    );
-    return ARPoint(
-      x: totalX / points.length,
-      y: 0.0,
-      z: totalZ / points.length,
-    );
-  }
-
-  ARPoint _roomCenter(RoomModel room) {
-    final totalX = room.points.fold<double>(
-      0.0,
-      (sum, point) => sum + point.x,
-    );
-    final totalZ = room.points.fold<double>(
-      0.0,
-      (sum, point) => sum + point.z,
-    );
-    return ARPoint(
-      x: totalX / room.points.length,
-      y: 0.0,
-      z: totalZ / room.points.length,
-    );
   }
 
   Future<bool> undoTransform() async {

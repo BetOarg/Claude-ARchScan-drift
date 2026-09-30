@@ -14,6 +14,7 @@ export 'src/geometry/geometry_service.dart';
 export 'src/geometry/shared_wall_service.dart';
 export 'src/geometry/plan_edit_geometry.dart';
 export 'src/geometry/plan_closure.dart';
+export 'src/geometry/polygon_overlap.dart';
 export 'src/geometry/wall_segment.dart';
 
 export 'src/persistence/project_repository.dart';
