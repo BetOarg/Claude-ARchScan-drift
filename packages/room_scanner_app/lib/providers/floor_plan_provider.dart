@@ -313,7 +313,7 @@ class FloorPlanProvider extends ChangeNotifier {
         await save(uuid: uuid, name: name, rooms: rooms);
         return true;
       } catch (e) {
-        debugPrint('No se pudo guardar el proyecto "$name": $e');
+        debugPrint('Could not save project "$name": $e');
         return false;
       }
     });
@@ -2466,11 +2466,7 @@ class FloorPlanProvider extends ChangeNotifier {
     );
   }
 
-  /// Construye la referencia común que utilizarán el plano 2D, Basic Scanner,
-  /// ARCore y ARKit para continuar el relevamiento desde una abertura.
-  ///
-  /// Devuelve `null` si el ambiente o la abertura ya no existen. Esto evita
-  /// iniciar un escaneo con una selección desactualizada.
+  /// Returns `null` if the room or opening no longer exists.
   ScanContinuationReference? createContinuationReference({
     required String roomId,
     required String featureId,

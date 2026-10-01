@@ -71,13 +71,13 @@ class BasicScannerAdapter implements ScannerAdapter {
   }) {
     if (!distanceMeters.isFinite || distanceMeters <= 0) {
       throw ArgumentError(
-        'La distancia debe ser mayor que 0.',
+        'Distance must be greater than 0.',
       );
     }
 
     if (!angleDegrees.isFinite) {
       throw ArgumentError(
-        'La dirección debe ser un número válido.',
+        'Direction must be a valid number.',
       );
     }
 

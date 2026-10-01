@@ -25,8 +25,7 @@ class ScannerEngine {
 
     if (!_adapter!.isAvailable) {
       throw StateError(
-        'El modo ${adapter.mode.name} no está disponible '
-        'en este dispositivo.',
+        'Mode ${adapter.mode.name} is not available on this device.',
       );
     }
 
@@ -39,7 +38,7 @@ class ScannerEngine {
 
     if (adapter == null) {
       throw StateError(
-        'ScannerEngine no está inicializado.',
+        'ScannerEngine is not initialized.',
       );
     }
 

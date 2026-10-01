@@ -292,7 +292,7 @@ class ScannerProvider extends ChangeNotifier {
         (sillHeightMeters != null &&
             (!sillHeightMeters.isFinite || sillHeightMeters < 0))) {
       return ValidationResult.invalid(
-        'La altura debe ser positiva y el antepecho no puede ser negativo.',
+        'Height must be positive and sill height cannot be negative.',
         code: ValidationErrorCode.invalidOpeningHeights,
       );
     }
@@ -376,10 +376,8 @@ class ScannerProvider extends ChangeNotifier {
       final startMeters = wall.centredOpeningStart(location, measuredWidth);
       if (startMeters == null) {
         return ValidationResult.invalid(
-          'La abertura mide '
-          '${_formatLength(measuredWidth)}, '
-          'pero la pared mide '
-          '${_formatLength(wall.length)}.',
+          'Opening measures ${_formatLength(measuredWidth)}, '
+          'but wall measures ${_formatLength(wall.length)}.',
           code: ValidationErrorCode.openingExceedsWall,
           data: {
             'openingWidth': _formatLength(measuredWidth),
@@ -404,8 +402,7 @@ class ScannerProvider extends ChangeNotifier {
       separationMeters: 0.02,
     )) {
       return ValidationResult.invalid(
-        'La abertura se superpone con otra puerta o ventana. '
-        'Elegí otra posición sobre la pared.',
+        'Opening overlaps with another door or window.',
         code: ValidationErrorCode.openingOverlaps,
       );
     }

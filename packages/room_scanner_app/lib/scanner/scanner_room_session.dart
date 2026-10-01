@@ -171,7 +171,7 @@ mixin ScannerRoomSession<T extends StatefulWidget> on State<T> {
         _lastDraftFingerprint = fingerprint;
       }).catchError((Object error) {
         _lastDraftFingerprint = null;
-        debugPrint('No se pudo guardar el borrador: $error');
+        debugPrint('Could not save scan draft: $error');
       });
     });
   }

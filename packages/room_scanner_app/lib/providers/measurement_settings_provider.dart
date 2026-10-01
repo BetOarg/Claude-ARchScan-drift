@@ -79,10 +79,7 @@ class MeasurementSettingsProvider
         _system = storedSystem;
       }
     } catch (error) {
-      debugPrint(
-        'No se pudo cargar el sistema de medición: '
-        '$error',
-      );
+      debugPrint('Could not load measurement system: $error');
     }
 
     _isLoaded = true;
@@ -102,10 +99,7 @@ class MeasurementSettingsProvider
     try {
       await _storage.writeSystem(system);
     } catch (error) {
-      debugPrint(
-        'No se pudo guardar el sistema de medición: '
-        '$error',
-      );
+      debugPrint('Could not save measurement system: $error');
     }
   }
 }
