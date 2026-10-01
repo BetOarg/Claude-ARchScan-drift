@@ -17,9 +17,7 @@ void main() {
     return;
   }
 
-  stdout.writeln(
-    'Auditoría de secretos, permisos, almacenamiento local y marca completada.',
-  );
+  stdout.writeln('Security audit passed: secrets, permissions, storage and branding OK.');
 }
 
 Directory _findRepositoryRoot() {
@@ -31,7 +29,7 @@ Directory _findRepositoryRoot() {
     }
     final parent = directory.parent;
     if (parent.path == directory.path) {
-      throw StateError('No se encontró la raíz del repositorio.');
+      throw StateError('Repository root not found.');
     }
     directory = parent;
   }
@@ -78,20 +76,28 @@ void _scanForSecrets(Directory root, List<String> errors) {
   };
   final patterns = <MapEntry<String, RegExp>>[
     MapEntry(
-      'clave privada',
+      'private key',
       RegExp(r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'),
     ),
     MapEntry(
-      'token de GitHub',
+      'GitHub token',
       RegExp(r'gh[pousr]_[A-Za-z0-9]{20,}'),
     ),
     MapEntry(
-      'clave de acceso AWS',
+      'AWS access key',
       RegExp(r'AKIA[0-9A-Z]{16}'),
     ),
     MapEntry(
-      'JWT incorporado',
+      'embedded JWT',
       RegExp(r'eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}'),
+    ),
+    MapEntry(
+      'Google API key',
+      RegExp(r'AIza[0-9A-Za-z\-_]{35}'),
+    ),
+    MapEntry(
+      'Firebase token',
+      RegExp(r'firebase[_-]?(?:token|key|secret)\s*[:=]\s*["\047][A-Za-z0-9]{20,}'),
     ),
   ];
 
@@ -110,14 +116,14 @@ void _scanForSecrets(Directory root, List<String> errors) {
     if (forbiddenBinaryExtensions.contains(extension)) {
       const allowedTestKey = '.github/signing/room-scanner-test.keystore.b64';
       if (relative != allowedTestKey) {
-        errors.add('Archivo sensible versionado: $relative.');
+        errors.add('Sensitive file checked in: $relative.');
       }
       continue;
     }
 
     if (relative.endsWith('.env') ||
         (relative.contains('.env.') && !relative.endsWith('.example'))) {
-      errors.add('Archivo de entorno real versionado: $relative.');
+      errors.add('Environment file checked in: $relative.');
       continue;
     }
 
@@ -133,7 +139,7 @@ void _scanForSecrets(Directory root, List<String> errors) {
     for (final pattern in patterns) {
       if (pattern.value.hasMatch(content)) {
         errors.add(
-          'Posible ${pattern.key} incorporada en $relative.',
+          'Possible embedded ${pattern.key} in $relative.',
         );
       }
     }
@@ -148,7 +154,7 @@ void _verifyPermissions(Directory root, List<String> errors) {
   if (!manifest.contains(
     '<uses-permission android:name="android.permission.CAMERA" />',
   )) {
-    errors.add('Falta el permiso funcional de cámara en Android.');
+    errors.add('Missing CAMERA permission in Android manifest.');
   }
   for (final permission in [
     'android.permission.RECORD_AUDIO',
@@ -161,7 +167,7 @@ void _verifyPermissions(Directory root, List<String> errors) {
     );
     if (!removalPattern.hasMatch(manifest)) {
       errors.add(
-        '$permission debe eliminarse explícitamente del manifiesto fusionado.',
+        '$permission must be explicitly removed from the merged manifest.',
       );
     }
   }
@@ -172,14 +178,14 @@ void _verifyPermissions(Directory root, List<String> errors) {
       !manifest.contains(
         'android.hardware.camera.ar" android:required="false"',
       )) {
-    errors.add('Las capacidades de cámara/AR deben ser opcionales.');
+    errors.add('Camera/AR hardware features must be optional (required="false").');
   }
 
   final infoPlist = File(
     '${root.path}/packages/room_scanner_app/ios/Runner/Info.plist',
   ).readAsStringSync();
   if (!infoPlist.contains('<key>NSCameraUsageDescription</key>')) {
-    errors.add('Falta NSCameraUsageDescription en iOS.');
+    errors.add('Missing NSCameraUsageDescription in iOS Info.plist.');
   }
   for (final forbidden in [
     'NSLocationWhenInUseUsageDescription',
@@ -187,7 +193,7 @@ void _verifyPermissions(Directory root, List<String> errors) {
     'NSUserTrackingUsageDescription',
   ]) {
     if (infoPlist.contains(forbidden)) {
-      errors.add('Permiso iOS no esperado: $forbidden.');
+      errors.add('Unexpected iOS permission: $forbidden.');
     }
   }
 
@@ -195,10 +201,8 @@ void _verifyPermissions(Directory root, List<String> errors) {
     '${root.path}/packages/room_scanner_app/ios/Runner/'
     'PrivacyInfo.xcprivacy',
   ).readAsStringSync();
-  if (!privacyManifest.contains(
-    '<key>NSPrivacyTracking</key>\n\t<false/>',
-  )) {
-    errors.add('PrivacyInfo.xcprivacy debe declarar tracking desactivado.');
+  if (!RegExp(r'<key>NSPrivacyTracking</key>\s*<false/>').hasMatch(privacyManifest)) {
+    errors.add('PrivacyInfo.xcprivacy must declare tracking disabled.');
   }
 }
 
@@ -209,10 +213,10 @@ void _verifyBranding(Directory root, List<String> errors) {
     );
     final content = file.readAsStringSync();
     if (!content.contains('"appTitle": "ARchScan"')) {
-      errors.add('$locale no utiliza ARchScan como título.');
+      errors.add('$locale does not use ARchScan as app title.');
     }
     if (content.contains('Claude Room Scanner')) {
-      errors.add('$locale contiene la marca anterior.');
+      errors.add('$locale contains legacy branding "Claude Room Scanner".');
     }
   }
 }

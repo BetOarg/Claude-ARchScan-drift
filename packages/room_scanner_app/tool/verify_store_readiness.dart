@@ -8,26 +8,26 @@ void main(List<String> arguments) {
 
   void requireFile(String path) {
     if (!File('${root.path}/$path').existsSync()) {
-      errors.add('Falta $path.');
+      errors.add('Missing $path.');
     }
   }
 
   void requireMaxCharacters(String path, int maximum) {
     final file = File('${root.path}/$path');
     if (!file.existsSync()) {
-      errors.add('Falta $path.');
+      errors.add('Missing $path.');
       return;
     }
     final value = file.readAsStringSync().trim();
     if (value.runes.length > maximum) {
-      errors.add('$path supera el límite de $maximum caracteres.');
+      errors.add('$path exceeds $maximum character limit.');
     }
   }
 
   String readRequired(String path) {
     final file = File('${root.path}/$path');
     if (!file.existsSync()) {
-      errors.add('Falta $path.');
+      errors.add('Missing $path.');
       return '';
     }
     return file.readAsStringSync();
@@ -36,7 +36,7 @@ void main(List<String> arguments) {
   void requireText(String path, String expected) {
     final content = readRequired(path);
     if (content.isNotEmpty && !content.contains(expected)) {
-      errors.add('$path no contiene el valor esperado: $expected.');
+      errors.add('$path does not contain expected value: $expected.');
     }
   }
 
@@ -97,24 +97,26 @@ void main(List<String> arguments) {
     ]) {
       if (!androidManifest.contains(required)) {
         errors.add(
-          'AndroidManifest.xml no contiene la protección requerida: $required.',
+          'AndroidManifest.xml missing required entry: $required.',
         );
       }
     }
+    final removeRecordAudio = RegExp(
+      r'<uses-permission\s+android:name="android\.permission\.RECORD_AUDIO"\s+tools:node="remove"',
+    );
     if (androidManifest.contains('android.permission.RECORD_AUDIO') &&
-        !androidManifest.contains(
-          '<uses-permission\n        android:name="android.permission.RECORD_AUDIO"\n        tools:node="remove"',
-        )) {
+        !removeRecordAudio.hasMatch(androidManifest)) {
       errors.add(
-        'AndroidManifest.xml declara un permiso incompatible: RECORD_AUDIO.',
+        'AndroidManifest.xml declares incompatible permission: RECORD_AUDIO.',
       );
     }
+    final removeInternet = RegExp(
+      r'<uses-permission\s+android:name="android\.permission\.INTERNET"\s+tools:node="remove"',
+    );
     if (androidManifest.contains('android.permission.INTERNET') &&
-        !androidManifest.contains(
-          '<uses-permission\n        android:name="android.permission.INTERNET"\n        tools:node="remove"',
-        )) {
+        !removeInternet.hasMatch(androidManifest)) {
       errors.add(
-        'AndroidManifest.xml declara un permiso incompatible: INTERNET.',
+        'AndroidManifest.xml declares incompatible permission: INTERNET.',
       );
     }
   }
@@ -134,7 +136,7 @@ void main(List<String> arguments) {
     ]) {
       if (infoPlist.contains(forbidden)) {
         errors.add(
-          'Info.plist contiene una declaración de privacidad no utilizada: $forbidden.',
+          'Info.plist contains unused privacy declaration: $forbidden.',
         );
       }
     }
@@ -152,7 +154,7 @@ void main(List<String> arguments) {
     ]) {
       if (!privacyManifest.contains(required)) {
         errors.add(
-          'PrivacyInfo.xcprivacy no contiene el requisito esperado: $required.',
+          'PrivacyInfo.xcprivacy missing required entry: $required.',
         );
       }
     }
@@ -176,10 +178,10 @@ void main(List<String> arguments) {
       multiLine: true,
     );
     if (!versionPattern.hasMatch(pubspec.readAsStringSync())) {
-      errors.add('pubspec.yaml no declara una versión publicable.');
+      errors.add('pubspec.yaml does not declare a publishable version.');
     }
   } else {
-    errors.add('Falta packages/room_scanner_app/pubspec.yaml.');
+    errors.add('Missing packages/room_scanner_app/pubspec.yaml.');
   }
 
   final publicDocuments = [
@@ -194,7 +196,7 @@ void main(List<String> arguments) {
     final file = File('${root.path}/$path');
     if (file.existsSync() &&
         RegExp(r'\[COMPLETAR[^\]]*\]').hasMatch(file.readAsStringSync())) {
-      final message = '$path todavía contiene campos pendientes de completar.';
+      final message = '$path still contains placeholder fields to complete.';
       if (strict) {
         errors.add(message);
       } else {
@@ -204,7 +206,7 @@ void main(List<String> arguments) {
   }
 
   for (final warning in warnings) {
-    stdout.writeln('ADVERTENCIA: $warning');
+    stdout.writeln('WARNING: $warning');
   }
   for (final error in errors) {
     stderr.writeln('ERROR: $error');
@@ -217,8 +219,8 @@ void main(List<String> arguments) {
 
   stdout.writeln(
     strict
-        ? 'Comprobaciones documentales estrictas verificadas; falta validar firma, AAB, SDKs, URLs públicas y Play Console.'
-        : 'Estructura de publicación verificada.',
+        ? 'Strict document checks passed; signing, AAB, SDKs, public URLs and Play Console still need manual verification.'
+        : 'Publication structure verified.',
   );
 }
 
@@ -236,7 +238,7 @@ Directory _findRepositoryRoot() {
 
     final parent = directory.parent;
     if (parent.path == directory.path) {
-      throw StateError('No se encontró la raíz del repositorio.');
+      throw StateError('Repository root not found.');
     }
     directory = parent;
   }
