@@ -37,7 +37,7 @@ jobs:
           missing=0
           for variable in             IOS_DISTRIBUTION_CERTIFICATE_BASE64             IOS_CERTIFICATE_PASSWORD             IOS_PROVISIONING_PROFILE_BASE64             APPLE_TEAM_ID; do
             if [ -z "${!variable}" ]; then
-              echo "::error::Falta el secret $variable"
+              echo "::error::Missing required secret $variable"
               missing=1
             fi
           done
@@ -47,7 +47,7 @@ jobs:
               APP_STORE_CONNECT_ISSUER_ID \
               APP_STORE_CONNECT_PRIVATE_KEY_BASE64; do
               if [ -z "${!variable}" ]; then
-                echo "::error::Falta el secret $variable para subir a App Store Connect"
+                echo "::error::Missing secret $variable required for App Store Connect upload"
                 missing=1
               fi
             done
@@ -60,7 +60,7 @@ jobs:
           xcodebuild -version
           xcode_major="$(xcodebuild -version | awk 'NR == 1 { split($2, version, "."); print version[1] }')"
           if [ "$xcode_major" -lt 26 ]; then
-            echo "::error::App Store Connect requiere Xcode 26 o posterior"
+            echo "::error::App Store Connect requires Xcode 26 or later"
             exit 1
           fi
 
@@ -146,7 +146,7 @@ jobs:
         shell: bash
         run: |
           IPA_PATH="$(find build/ios/ipa -maxdepth 1 -name '*.ipa' -type f | head -n 1)"
-          test -n "$IPA_PATH" || { echo "::error::No se generó el IPA"; exit 1; }
+          test -n "$IPA_PATH" || { echo "::error::IPA was not generated"; exit 1; }
 
           REPORT_DIR="build/ios/ipa-audit"
           EXTRACT_DIR="$RUNNER_TEMP/archscan-ipa"
@@ -154,7 +154,7 @@ jobs:
           ditto -x -k "$IPA_PATH" "$EXTRACT_DIR"
 
           APP_PATH="$(find "$EXTRACT_DIR/Payload" -maxdepth 1 -name '*.app' -type d | head -n 1)"
-          test -n "$APP_PATH" || { echo "::error::El IPA no contiene una app"; exit 1; }
+          test -n "$APP_PATH" || { echo "::error::IPA does not contain an app bundle"; exit 1; }
 
           shasum -a 256 "$IPA_PATH" | tee "$REPORT_DIR/SHA256SUMS.txt"
           plutil -p "$APP_PATH/Info.plist" | tee "$REPORT_DIR/Info.plist.txt"
@@ -167,7 +167,7 @@ jobs:
             > "$REPORT_DIR/embedded-profile.txt"
 
           test -f "$APP_PATH/PrivacyInfo.xcprivacy" || {
-            echo "::error::El IPA no incluye PrivacyInfo.xcprivacy"
+            echo "::error::IPA does not include PrivacyInfo.xcprivacy"
             exit 1
           }
           cp "$APP_PATH/PrivacyInfo.xcprivacy" "$REPORT_DIR/PrivacyInfo.xcprivacy"
@@ -198,33 +198,33 @@ jobs:
           profile_entitlements = profile.get("Entitlements", {})
           expiration = profile.get("ExpirationDate")
           if not isinstance(expiration, datetime.datetime):
-              raise SystemExit("El perfil no contiene una fecha de vencimiento válida")
+              raise SystemExit("Profile does not contain a valid expiration date")
           now = datetime.datetime.now(datetime.timezone.utc)
           if expiration.tzinfo is None:
               expiration = expiration.replace(tzinfo=datetime.timezone.utc)
           if expiration <= now:
-              raise SystemExit(f"El perfil de distribución está vencido: {expiration.isoformat()}")
+              raise SystemExit(f"Distribution profile expired: {expiration.isoformat()}")
 
           if profile_entitlements.get("get-task-allow", False):
-              raise SystemExit("El perfil permite depuración (get-task-allow=true)")
+              raise SystemExit("Profile allows debugging (get-task-allow=true)")
           if signed_entitlements.get("get-task-allow", False):
-              raise SystemExit("La app firmada permite depuración (get-task-allow=true)")
+              raise SystemExit("Signed app allows debugging (get-task-allow=true)")
           if profile.get("ProvisionsAllDevices", False):
-              raise SystemExit("El perfil es empresarial, no App Store Connect")
+              raise SystemExit("Profile is enterprise, not App Store Connect")
           if profile_entitlements.get("application-identifier") != expected_application_id:
-              raise SystemExit("El application-identifier del perfil no coincide")
+              raise SystemExit("Profile application-identifier mismatch")
           if signed_entitlements.get("application-identifier") != expected_application_id:
-              raise SystemExit("El application-identifier de la app firmada no coincide")
+              raise SystemExit("Signed app application-identifier mismatch")
           if profile_entitlements.get("com.apple.developer.team-identifier") != expected_team:
-              raise SystemExit("El Team ID del perfil no coincide")
+              raise SystemExit("Profile Team ID mismatch")
           if signed_entitlements.get("com.apple.developer.team-identifier") != expected_team:
-              raise SystemExit("El Team ID de la app firmada no coincide")
+              raise SystemExit("Signed app Team ID mismatch")
           if profile.get("TeamIdentifier", [None])[0] != expected_team:
-              raise SystemExit("El TeamIdentifier superior del perfil no coincide")
+              raise SystemExit("Profile top-level TeamIdentifier mismatch")
 
-          print(f"Perfil válido hasta: {expiration.isoformat()}")
+          print(f"Profile valid until: {expiration.isoformat()}")
           print(f"Application identifier: {expected_application_id}")
-          print("Depuración de distribución: desactivada")
+          print("Distribution debugging: disabled")
           PY
 
           BUNDLE_ID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_PATH/Info.plist")
@@ -244,7 +244,7 @@ jobs:
         shell: bash
         run: |
           IPA_PATH="$(find build/ios/ipa -maxdepth 1 -name '*.ipa' -type f | head -n 1)"
-          test -n "$IPA_PATH" || { echo "::error::No se encontró el IPA validado"; exit 1; }
+          test -n "$IPA_PATH" || { echo "::error::Validated IPA not found"; exit 1; }
 
           PRIVATE_KEYS_DIR="$HOME/.appstoreconnect/private_keys"
           PRIVATE_KEY_PATH="$PRIVATE_KEYS_DIR/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"

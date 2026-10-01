@@ -32,7 +32,7 @@ jobs:
           missing=0
           for variable in ANDROID_KEYSTORE_BASE64 ANDROID_STORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
             if [ -z "${!variable}" ]; then
-              echo "::error::Falta el secret $variable"
+              echo "::error::Missing required secret $variable"
               missing=1
             fi
           done
@@ -121,19 +121,19 @@ jobs:
 
           manifest="$(find build/app/intermediates -path '*release*' -name AndroidManifest.xml -type f | head -n 1)"
           if [ -z "$manifest" ]; then
-            echo "::error::No se encontró el manifiesto Android fusionado"
+            echo "::error::Merged Android manifest not found"
             exit 1
           fi
           cp "$manifest" "$report/AndroidManifest.xml"
           grep -o 'uses-permission[^>]*' "$manifest" | sort -u > "$report/permissions.txt" || true
 
           grep -Fq 'android.permission.CAMERA' "$report/permissions.txt" || {
-            echo "::error::El AAB final no declara el permiso de cámara"
+            echo "::error::Final AAB does not declare CAMERA permission"
             exit 1
           }
 
           if grep -Eq 'android.permission.(RECORD_AUDIO|INTERNET)' "$report/permissions.txt"; then
-            echo "::error::El AAB contiene permisos incompatibles con la declaración de privacidad"
+            echo "::error::AAB contains permissions incompatible with the privacy declaration"
             exit 1
           fi
 
@@ -148,7 +148,7 @@ jobs:
             printf '%s: %s\n' "$relative" "$alignments" | tee -a "$report/page-alignment-16kb.txt"
             for alignment in $alignments; do
               if (( alignment < 0x4000 )); then
-                echo "::error::$relative usa alineación $alignment (< 0x4000)"
+                echo "::error::$relative uses alignment $alignment (< 0x4000)"
                 incompatible=1
               fi
             done

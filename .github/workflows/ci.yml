@@ -147,7 +147,7 @@ jobs:
           fi
 
           if [ -z "$sdkmanager_bin" ] || [ ! -x "$sdkmanager_bin" ]; then
-            echo "sdkmanager no está disponible en $sdk_root" >&2
+            echo "sdkmanager is not available in $sdk_root" >&2
             exit 1
           fi
 
@@ -197,7 +197,7 @@ jobs:
           path: packages
 
       - name: Analyze code
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+        run: flutter analyze --fatal-infos
         working-directory: packages/room_scanner_app
 
       - name: Run tests

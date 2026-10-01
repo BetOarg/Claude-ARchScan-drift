@@ -23,8 +23,8 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      # Clave pública exclusiva para APK de prueba.
-      # No utilizar esta firma para una publicación en Play Store.
+      # Public key for test APK only.
+      # Do not use this signing key for Play Store releases.
       - name: Install fixed Android test signing key
         shell: bash
         run: |
@@ -47,9 +47,9 @@ jobs:
           )"
 
           if [[ "$ACTUAL_SHA256" != "$TEST_SIGNING_SHA256" ]]; then
-            echo "La firma fija de pruebas no coincide con la huella autorizada."
-            echo "Esperada: $TEST_SIGNING_SHA256"
-            echo "Recibida: ${ACTUAL_SHA256:-no disponible}"
+            echo "Fixed test signing key does not match the authorized fingerprint."
+            echo "Expected: $TEST_SIGNING_SHA256"
+            echo "Received: ${ACTUAL_SHA256:-unavailable}"
             exit 1
           fi
 
@@ -75,8 +75,8 @@ jobs:
       - name: Build versioned APK
         working-directory: packages/room_scanner_app
         run: |
-          # Monotónico, único por ejecución y reintento. Evita APK con un
-          # versionCode repetido o menor que el ya instalado.
+          # Monotonic, unique per run and attempt. Prevents APK with a
+          # repeated or lower versionCode than the one already installed.
           VERSION_CODE=$((
             270000000 +
             ${{ github.run_number }} * 100 +
@@ -87,7 +87,7 @@ jobs:
           )"
 
           if [[ -z "$APP_VERSION" ]]; then
-            echo "No se pudo leer la versión desde pubspec.yaml."
+            echo "Could not read version from pubspec.yaml."
             exit 1
           fi
 
@@ -112,7 +112,7 @@ jobs:
           )"
 
           if ! grep -Fqi "$EXPECTED_COMPACT" <<< "$APK_CERTIFICATE"; then
-            echo "El APK final no conserva la firma fija de pruebas."
+            echo "Final APK does not retain the fixed test signing key."
             exit 1
           fi
 
@@ -126,25 +126,25 @@ jobs:
           printf '%s\n' "$APK_CERTIFICATE"             > "$REPORT_DIR/signing-certificate.txt"
 
           grep -Fq "package: name='com.bet0.ARchScan'"             "$REPORT_DIR/package-version-sdk.txt" || {
-              echo "El APK no usa el Application ID esperado."
+              echo "APK does not use the expected Application ID."
               exit 1
             }
 
           grep -Fq "android.permission.CAMERA" "$REPORT_DIR/permissions.txt" || {
-              echo "El APK final no declara el permiso de cámara."
+              echo "Final APK does not declare CAMERA permission."
               exit 1
             }
 
           if grep -Eq "android.permission.(RECORD_AUDIO|INTERNET)" \
               "$REPORT_DIR/permissions.txt"; then
-            echo "El APK final contiene permisos incompatibles con la declaración de privacidad."
+            echo "Final APK contains permissions incompatible with the privacy declaration."
             exit 1
           fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: archscan-apk-pruebas-${{ github.run_number }}
+          name: archscan-apk-test-${{ github.run_number }}
           path: |
             packages/room_scanner_app/build/app/outputs/flutter-apk/room-scanner-build-${{ github.run_number }}.apk
             packages/room_scanner_app/build/apk-audit
