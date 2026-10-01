@@ -648,7 +648,13 @@ mixin _OpeningDialogs on State<FloorPlanViewerScreen>, _PlanWallEditing {
     _showMessage(
       result.isSuccess
           ? localizations.openingUpdated
-          : result.errorMessage ?? localizations.invalidOpeningMeasurement,
+          : openingGeometryErrorMessage(
+              result.errorCode,
+              result.errorData,
+              localizations,
+              fallback: result.errorMessage ??
+                  localizations.invalidOpeningMeasurement,
+            ),
       error: !result.isSuccess,
     );
   }
@@ -897,8 +903,13 @@ mixin _OpeningDialogs on State<FloorPlanViewerScreen>, _PlanWallEditing {
     _showMessage(
       result.isSuccess
           ? AppLocalizations.of(context)!.openingUpdated
-          : result.errorMessage ??
-                AppLocalizations.of(context)!.invalidOpeningMeasurement,
+          : openingGeometryErrorMessage(
+              result.errorCode,
+              result.errorData,
+              AppLocalizations.of(context)!,
+              fallback: result.errorMessage ??
+                  AppLocalizations.of(context)!.invalidOpeningMeasurement,
+            ),
       error: !result.isSuccess,
     );
   }

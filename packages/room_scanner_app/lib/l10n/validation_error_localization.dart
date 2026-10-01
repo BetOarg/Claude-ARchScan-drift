@@ -50,6 +50,30 @@ String validationErrorMessage(
       return l10n.planErrorInvalidMeasurement;
     case ValidationErrorCode.editCausesConflict:
       return l10n.planErrorEditCausesConflict;
+    case ValidationErrorCode.openingWidthTooSmall:
+      return l10n.openingGeomWidthTooSmall;
+    case ValidationErrorCode.negativeDistanceFromCorner:
+      return l10n.openingGeomNegativeDistance;
+    case ValidationErrorCode.openingHeightTooSmall:
+      return l10n.openingGeomHeightTooSmall;
+    case ValidationErrorCode.negativeSillHeight:
+      return l10n.openingGeomNegativeSillHeight;
+    case ValidationErrorCode.roomNotAvailable:
+      return l10n.openingGeomRoomNotAvailable;
+    case ValidationErrorCode.openingNotAvailable:
+      return l10n.openingGeomOpeningNotAvailable;
+    case ValidationErrorCode.wallNotIdentified:
+      return l10n.openingGeomWallNotIdentified;
+    case ValidationErrorCode.openingExceedsWallLength:
+      return l10n.openingGeomExceedsWall(data['wallLength'] ?? '');
+    case ValidationErrorCode.openingOverlapsExisting:
+      return l10n.openingGeomOverlaps;
+    case ValidationErrorCode.openingUpdateFailed:
+      return l10n.openingGeomUpdateFailed;
+    case ValidationErrorCode.invalidWallOrMeasurements:
+      return l10n.openingGeomInvalidWallOrMeasurements;
+    case ValidationErrorCode.connectedOpeningMustBeOnWall:
+      return l10n.openingGeomConnectedMustBeOnWall;
     case null:
       return fallback;
   }
@@ -64,4 +88,40 @@ String? validationWarningMessage(
   final w = result.errorData['measuredWidth'];
   if (w != null) return l10n.scanWarningOpeningMeasured(w);
   return result.warningMessage;
+}
+
+String openingGeometryErrorMessage(
+  ValidationErrorCode? code,
+  Map<String, String> data,
+  AppLocalizations l10n, {
+  required String fallback,
+}) {
+  switch (code) {
+    case ValidationErrorCode.openingWidthTooSmall:
+      return l10n.openingGeomWidthTooSmall;
+    case ValidationErrorCode.negativeDistanceFromCorner:
+      return l10n.openingGeomNegativeDistance;
+    case ValidationErrorCode.openingHeightTooSmall:
+      return l10n.openingGeomHeightTooSmall;
+    case ValidationErrorCode.negativeSillHeight:
+      return l10n.openingGeomNegativeSillHeight;
+    case ValidationErrorCode.roomNotAvailable:
+      return l10n.openingGeomRoomNotAvailable;
+    case ValidationErrorCode.openingNotAvailable:
+      return l10n.openingGeomOpeningNotAvailable;
+    case ValidationErrorCode.wallNotIdentified:
+      return l10n.openingGeomWallNotIdentified;
+    case ValidationErrorCode.openingExceedsWallLength:
+      return l10n.openingGeomExceedsWall(data['wallLength'] ?? '');
+    case ValidationErrorCode.openingOverlapsExisting:
+      return l10n.openingGeomOverlaps;
+    case ValidationErrorCode.openingUpdateFailed:
+      return l10n.openingGeomUpdateFailed;
+    case ValidationErrorCode.invalidWallOrMeasurements:
+      return l10n.openingGeomInvalidWallOrMeasurements;
+    case ValidationErrorCode.connectedOpeningMustBeOnWall:
+      return l10n.openingGeomConnectedMustBeOnWall;
+    default:
+      return fallback;
+  }
 }

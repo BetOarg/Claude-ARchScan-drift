@@ -2314,26 +2314,30 @@ class FloorPlanProvider extends ChangeNotifier {
   }) async {
     if (!widthMeters.isFinite || widthMeters < 0.20) {
       return const OpeningGeometryUpdateResult.invalid(
-        'El ancho debe ser de al menos 0,20 metros.',
+        null,
+        errorCode: ValidationErrorCode.openingWidthTooSmall,
       );
     }
     if (!distanceFromWallStartMeters.isFinite ||
         distanceFromWallStartMeters < 0) {
       return const OpeningGeometryUpdateResult.invalid(
-        'La distancia desde la esquina no puede ser negativa.',
+        null,
+        errorCode: ValidationErrorCode.negativeDistanceFromCorner,
       );
     }
     if (openingHeightMeters != null &&
         (!openingHeightMeters.isFinite ||
             openingHeightMeters < 0.20)) {
       return const OpeningGeometryUpdateResult.invalid(
-        'La altura debe ser de al menos 0,20 metros.',
+        null,
+        errorCode: ValidationErrorCode.openingHeightTooSmall,
       );
     }
     if (sillHeightMeters != null &&
         (!sillHeightMeters.isFinite || sillHeightMeters < 0)) {
       return const OpeningGeometryUpdateResult.invalid(
-        'La altura desde el piso no puede ser negativa.',
+        null,
+        errorCode: ValidationErrorCode.negativeSillHeight,
       );
     }
 
@@ -2342,7 +2346,8 @@ class FloorPlanProvider extends ChangeNotifier {
     );
     if (roomIndex == -1) {
       return const OpeningGeometryUpdateResult.invalid(
-        'El ambiente seleccionado ya no está disponible.',
+        null,
+        errorCode: ValidationErrorCode.roomNotAvailable,
       );
     }
 
@@ -2352,7 +2357,8 @@ class FloorPlanProvider extends ChangeNotifier {
     );
     if (featureIndex == -1) {
       return const OpeningGeometryUpdateResult.invalid(
-        'La abertura seleccionada ya no está disponible.',
+        null,
+        errorCode: ValidationErrorCode.openingNotAvailable,
       );
     }
 
@@ -2360,7 +2366,8 @@ class FloorPlanProvider extends ChangeNotifier {
     final wall = _nearestWallProjection(room, feature);
     if (wall == null) {
       return const OpeningGeometryUpdateResult.invalid(
-        'No se pudo identificar la pared de la abertura.',
+        null,
+        errorCode: ValidationErrorCode.wallNotIdentified,
       );
     }
 
@@ -2368,8 +2375,9 @@ class FloorPlanProvider extends ChangeNotifier {
         distanceFromWallStartMeters + widthMeters;
     if (openingEndDistance > wall.length + 0.000001) {
       return OpeningGeometryUpdateResult.invalid(
-        'La abertura termina fuera de la pared de '
-        '${_formatLength(wall.length)}.',
+        null,
+        errorCode: ValidationErrorCode.openingExceedsWallLength,
+        errorData: {'wallLength': _formatLength(wall.length)},
       );
     }
 
@@ -2383,7 +2391,8 @@ class FloorPlanProvider extends ChangeNotifier {
       ignoreFeatureId: featureId,
     )) {
       return const OpeningGeometryUpdateResult.invalid(
-        'La abertura se superpone con otra puerta o ventana.',
+        null,
+        errorCode: ValidationErrorCode.openingOverlapsExisting,
       );
     }
 
@@ -2422,7 +2431,8 @@ class FloorPlanProvider extends ChangeNotifier {
 
     if (!changed) {
       return const OpeningGeometryUpdateResult.invalid(
-        'No se pudo actualizar la abertura.',
+        null,
+        errorCode: ValidationErrorCode.openingUpdateFailed,
       );
     }
 
@@ -2495,7 +2505,8 @@ class FloorPlanProvider extends ChangeNotifier {
     String? featureId,
   }) async {
     const invalid = OpeningGeometryUpdateResult.invalid(
-      'Elegí una pared y medidas válidas para la abertura.',
+      null,
+      errorCode: ValidationErrorCode.invalidWallOrMeasurements,
     );
     final index = _completedRooms.indexWhere((r) => r.id == roomId);
     if (index < 0 || !widthMeters.isFinite || widthMeters < 0.20 ||
@@ -2542,7 +2553,8 @@ class FloorPlanProvider extends ChangeNotifier {
       }
       if (targetWall == null) {
         return const OpeningGeometryUpdateResult.invalid(
-          'La abertura conectada debe permanecer sobre una pared de ambos ambientes.',
+          null,
+          errorCode: ValidationErrorCode.connectedOpeningMustBeOnWall,
         );
       }
       final lo = math.min(targetWall.fraction(start), targetWall.fraction(end)) * targetWall.length;
@@ -2555,7 +2567,8 @@ class FloorPlanProvider extends ChangeNotifier {
         ignoreFeatureId: featureId,
       )) {
         return const OpeningGeometryUpdateResult.invalid(
-          'La abertura se superpone con otra puerta o ventana.',
+          null,
+          errorCode: ValidationErrorCode.openingOverlapsExisting,
         );
       }
     }
@@ -2793,10 +2806,18 @@ class OpeningPlacement {
 class OpeningGeometryUpdateResult {
   final bool isSuccess;
   final String? errorMessage;
+  final ValidationErrorCode? errorCode;
+  final Map<String, String> errorData;
 
   const OpeningGeometryUpdateResult.success()
       : isSuccess = true,
-        errorMessage = null;
+        errorMessage = null,
+        errorCode = null,
+        errorData = const {};
 
-  const OpeningGeometryUpdateResult.invalid(this.errorMessage)
-      : isSuccess = false;}
+  const OpeningGeometryUpdateResult.invalid(
+    this.errorMessage, {
+    this.errorCode,
+    this.errorData = const {},
+  }) : isSuccess = false;
+}

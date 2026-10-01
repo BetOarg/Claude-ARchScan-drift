@@ -2696,6 +2696,78 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'El cambio genera un cruce, solapamiento o modifica una conexión. Revisá el plano.'**
   String get planErrorEditCausesConflict;
+
+  /// No description provided for @openingGeomWidthTooSmall.
+  ///
+  /// In es, this message translates to:
+  /// **'El ancho debe ser de al menos 0,20 metros.'**
+  String get openingGeomWidthTooSmall;
+
+  /// No description provided for @openingGeomNegativeDistance.
+  ///
+  /// In es, this message translates to:
+  /// **'La distancia desde la esquina no puede ser negativa.'**
+  String get openingGeomNegativeDistance;
+
+  /// No description provided for @openingGeomHeightTooSmall.
+  ///
+  /// In es, this message translates to:
+  /// **'La altura debe ser de al menos 0,20 metros.'**
+  String get openingGeomHeightTooSmall;
+
+  /// No description provided for @openingGeomNegativeSillHeight.
+  ///
+  /// In es, this message translates to:
+  /// **'La altura desde el piso no puede ser negativa.'**
+  String get openingGeomNegativeSillHeight;
+
+  /// No description provided for @openingGeomRoomNotAvailable.
+  ///
+  /// In es, this message translates to:
+  /// **'El ambiente seleccionado ya no está disponible.'**
+  String get openingGeomRoomNotAvailable;
+
+  /// No description provided for @openingGeomOpeningNotAvailable.
+  ///
+  /// In es, this message translates to:
+  /// **'La abertura seleccionada ya no está disponible.'**
+  String get openingGeomOpeningNotAvailable;
+
+  /// No description provided for @openingGeomWallNotIdentified.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo identificar la pared de la abertura.'**
+  String get openingGeomWallNotIdentified;
+
+  /// No description provided for @openingGeomExceedsWall.
+  ///
+  /// In es, this message translates to:
+  /// **'La abertura termina fuera de la pared de {wallLength}.'**
+  String openingGeomExceedsWall(String wallLength);
+
+  /// No description provided for @openingGeomOverlaps.
+  ///
+  /// In es, this message translates to:
+  /// **'La abertura se superpone con otra puerta o ventana.'**
+  String get openingGeomOverlaps;
+
+  /// No description provided for @openingGeomUpdateFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo actualizar la abertura.'**
+  String get openingGeomUpdateFailed;
+
+  /// No description provided for @openingGeomInvalidWallOrMeasurements.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegí una pared y medidas válidas para la abertura.'**
+  String get openingGeomInvalidWallOrMeasurements;
+
+  /// No description provided for @openingGeomConnectedMustBeOnWall.
+  ///
+  /// In es, this message translates to:
+  /// **'La abertura conectada debe permanecer sobre una pared de ambos ambientes.'**
+  String get openingGeomConnectedMustBeOnWall;
 }
 
 class _AppLocalizationsDelegate

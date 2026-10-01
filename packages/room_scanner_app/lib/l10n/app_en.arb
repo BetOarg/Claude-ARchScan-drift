@@ -601,5 +601,21 @@
   },
   "planErrorRoomNotFound": "Room not found.",
   "planErrorInvalidMeasurement": "The measurement is not valid.",
-  "planErrorEditCausesConflict": "The change causes an intersection, overlap, or modifies a connection. Review the plan."
+  "planErrorEditCausesConflict": "The change causes an intersection, overlap, or modifies a connection. Review the plan.",
+
+  "openingGeomWidthTooSmall": "The width must be at least 0.20 meters.",
+  "openingGeomNegativeDistance": "The distance from the corner cannot be negative.",
+  "openingGeomHeightTooSmall": "The height must be at least 0.20 meters.",
+  "openingGeomNegativeSillHeight": "The sill height cannot be negative.",
+  "openingGeomRoomNotAvailable": "The selected room is no longer available.",
+  "openingGeomOpeningNotAvailable": "The selected opening is no longer available.",
+  "openingGeomWallNotIdentified": "Could not identify the wall for this opening.",
+  "openingGeomExceedsWall": "The opening extends beyond the {wallLength} wall.",
+  "@openingGeomExceedsWall": {
+    "placeholders": { "wallLength": { "type": "String" } }
+  },
+  "openingGeomOverlaps": "The opening overlaps with another door or window.",
+  "openingGeomUpdateFailed": "Could not update the opening.",
+  "openingGeomInvalidWallOrMeasurements": "Choose a valid wall and measurements for the opening.",
+  "openingGeomConnectedMustBeOnWall": "A connected opening must remain on a wall shared by both rooms."
 }

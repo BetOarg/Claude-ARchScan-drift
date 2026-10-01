@@ -1486,4 +1486,52 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get planErrorEditCausesConflict =>
       'The change causes an intersection, overlap, or modifies a connection. Review the plan.';
+
+  @override
+  String get openingGeomWidthTooSmall =>
+      'The width must be at least 0.20 meters.';
+
+  @override
+  String get openingGeomNegativeDistance =>
+      'The distance from the corner cannot be negative.';
+
+  @override
+  String get openingGeomHeightTooSmall =>
+      'The height must be at least 0.20 meters.';
+
+  @override
+  String get openingGeomNegativeSillHeight =>
+      'The sill height cannot be negative.';
+
+  @override
+  String get openingGeomRoomNotAvailable =>
+      'The selected room is no longer available.';
+
+  @override
+  String get openingGeomOpeningNotAvailable =>
+      'The selected opening is no longer available.';
+
+  @override
+  String get openingGeomWallNotIdentified =>
+      'Could not identify the wall for this opening.';
+
+  @override
+  String openingGeomExceedsWall(String wallLength) {
+    return 'The opening extends beyond the $wallLength wall.';
+  }
+
+  @override
+  String get openingGeomOverlaps =>
+      'The opening overlaps with another door or window.';
+
+  @override
+  String get openingGeomUpdateFailed => 'Could not update the opening.';
+
+  @override
+  String get openingGeomInvalidWallOrMeasurements =>
+      'Choose a valid wall and measurements for the opening.';
+
+  @override
+  String get openingGeomConnectedMustBeOnWall =>
+      'A connected opening must remain on a wall shared by both rooms.';
 }

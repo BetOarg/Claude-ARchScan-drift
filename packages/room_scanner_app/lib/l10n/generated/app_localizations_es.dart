@@ -1497,4 +1497,52 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get planErrorEditCausesConflict =>
       'El cambio genera un cruce, solapamiento o modifica una conexión. Revisá el plano.';
+
+  @override
+  String get openingGeomWidthTooSmall =>
+      'El ancho debe ser de al menos 0,20 metros.';
+
+  @override
+  String get openingGeomNegativeDistance =>
+      'La distancia desde la esquina no puede ser negativa.';
+
+  @override
+  String get openingGeomHeightTooSmall =>
+      'La altura debe ser de al menos 0,20 metros.';
+
+  @override
+  String get openingGeomNegativeSillHeight =>
+      'La altura desde el piso no puede ser negativa.';
+
+  @override
+  String get openingGeomRoomNotAvailable =>
+      'El ambiente seleccionado ya no está disponible.';
+
+  @override
+  String get openingGeomOpeningNotAvailable =>
+      'La abertura seleccionada ya no está disponible.';
+
+  @override
+  String get openingGeomWallNotIdentified =>
+      'No se pudo identificar la pared de la abertura.';
+
+  @override
+  String openingGeomExceedsWall(String wallLength) {
+    return 'La abertura termina fuera de la pared de $wallLength.';
+  }
+
+  @override
+  String get openingGeomOverlaps =>
+      'La abertura se superpone con otra puerta o ventana.';
+
+  @override
+  String get openingGeomUpdateFailed => 'No se pudo actualizar la abertura.';
+
+  @override
+  String get openingGeomInvalidWallOrMeasurements =>
+      'Elegí una pared y medidas válidas para la abertura.';
+
+  @override
+  String get openingGeomConnectedMustBeOnWall =>
+      'La abertura conectada debe permanecer sobre una pared de ambos ambientes.';
 }

@@ -27,6 +27,20 @@ enum ValidationErrorCode {
   roomNotFound,
   invalidMeasurement,
   editCausesConflict,
+
+  // Opening geometry editing errors (floor plan provider).
+  openingWidthTooSmall,
+  negativeDistanceFromCorner,
+  openingHeightTooSmall,
+  negativeSillHeight,
+  roomNotAvailable,
+  openingNotAvailable,
+  wallNotIdentified,
+  openingExceedsWallLength,
+  openingOverlapsExisting,
+  openingUpdateFailed,
+  invalidWallOrMeasurements,
+  connectedOpeningMustBeOnWall,
 }
 
 class ValidationResult {
