@@ -621,6 +621,8 @@
   "exitScanTitle": "¿Salir del escaneo?",
   "exitScanConfirmation": "Hay datos de escaneo sin guardar. Si volvés atrás, se perderá este progreso.",
   "exitScanDiscard": "Descartar",
+  "viewPrivacyPolicy": "Ver política de privacidad",
+  "privacyPolicyOpenError": "No se pudo abrir la página de privacidad.",
   "deleteProjectConfirmation": "¿Eliminar \"{projectName}\" y todos sus ambientes? Esta acción no se puede deshacer.",
   "@deleteProjectConfirmation": {
     "placeholders": { "projectName": { "type": "String" } }

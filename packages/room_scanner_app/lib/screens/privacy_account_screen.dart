@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../providers/project_provider.dart';
@@ -15,7 +16,20 @@ class PrivacyAccountScreen extends StatefulWidget {
 }
 
 class _PrivacyAccountScreenState extends State<PrivacyAccountScreen> {
+  static final Uri _privacyPolicyUri = Uri.parse(
+    'https://sites.google.com/view/archscan/privacy',
+  );
+
   bool _isDeleting = false;
+
+  Future<void> _openPrivacyPolicy() async {
+    if (!await launchUrl(_privacyPolicyUri, mode: LaunchMode.externalApplication)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.privacyPolicyOpenError)),
+      );
+    }
+  }
 
   Future<void> _deleteLocalProjects() async {
     final localizations = AppLocalizations.of(context)!;
@@ -99,6 +113,12 @@ class _PrivacyAccountScreenState extends State<PrivacyAccountScreen> {
               description: localizations.trackingDescription,
             ),
             const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: _openPrivacyPolicy,
+              icon: const Icon(Icons.open_in_new, size: 18),
+              label: Text(localizations.viewPrivacyPolicy),
+            ),
+            const SizedBox(height: 16),
             Card(
               color: Theme.of(context).colorScheme.errorContainer,
               child: Padding(

@@ -117,7 +117,7 @@ dart test
 cd ../room_scanner_app
 flutter pub get
 flutter gen-l10n
-flutter analyze --no-fatal-infos --no-fatal-warnings
+flutter analyze --fatal-infos
 flutter test
 flutter run
 ```

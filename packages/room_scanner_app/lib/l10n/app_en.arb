@@ -621,6 +621,8 @@
   "exitScanTitle": "Exit scan?",
   "exitScanConfirmation": "You have unsaved scan data. If you go back, this progress will be lost.",
   "exitScanDiscard": "Discard",
+  "viewPrivacyPolicy": "View privacy policy",
+  "privacyPolicyOpenError": "Could not open the privacy policy page.",
   "deleteProjectConfirmation": "Delete \"{projectName}\" and all its rooms? This cannot be undone.",
   "@deleteProjectConfirmation": {
     "placeholders": { "projectName": { "type": "String" } }

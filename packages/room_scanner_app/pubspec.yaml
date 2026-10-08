@@ -63,6 +63,9 @@ dependencies:
   # Permiso de cámara en tiempo de ejecución
   permission_handler: ^11.3.1
 
+  # Abrir URL externas (política de privacidad)
+  url_launcher: ^6.2.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

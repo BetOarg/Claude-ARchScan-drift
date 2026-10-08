@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:developer' as developer;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
@@ -18,6 +22,32 @@ typedef RoomScannerInitializer =
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   configureScannerComposition();
+
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    developer.log(
+      details.exceptionAsString(),
+      name: 'FlutterError',
+      error: details.exception,
+      stackTrace: details.stack,
+    );
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    developer.log(
+      'Uncaught async error',
+      name: 'PlatformDispatcher',
+      error: error,
+      stackTrace: stack,
+    );
+    return true;
+  };
+
+  ErrorWidget.builder = (details) {
+    if (kDebugMode) return ErrorWidget(details.exception);
+    return const SizedBox.shrink();
+  };
+
   runApp(const RoomScannerBootstrap());
 }
 
