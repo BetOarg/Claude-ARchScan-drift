@@ -378,7 +378,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         await _renameProject(project);
                         break;
                       case _ProjectAction.delete:
-                        await provider.deleteProject(project.uuid);
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: Text(localizations.delete),
+                            content: Text(
+                              localizations
+                                  .deleteProjectConfirmation(project.name),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: Text(localizations.cancel),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                child: Text(localizations.delete),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true && mounted) {
+                          await provider.deleteProject(project.uuid);
+                        }
                         break;
                     }
                   },

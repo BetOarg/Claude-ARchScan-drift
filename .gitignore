@@ -5,6 +5,8 @@
 .pub-cache/
 .pub/
 build/
+*.g.dart
+**/l10n/generated/
 
 # Configuración local por entorno
 packages/room_scanner_app/config/*.json

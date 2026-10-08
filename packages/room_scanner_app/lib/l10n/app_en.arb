@@ -617,5 +617,9 @@
   "openingGeomOverlaps": "The opening overlaps with another door or window.",
   "openingGeomUpdateFailed": "Could not update the opening.",
   "openingGeomInvalidWallOrMeasurements": "Choose a valid wall and measurements for the opening.",
-  "openingGeomConnectedMustBeOnWall": "A connected opening must remain on a wall shared by both rooms."
+  "openingGeomConnectedMustBeOnWall": "A connected opening must remain on a wall shared by both rooms.",
+  "deleteProjectConfirmation": "Delete \"{projectName}\" and all its rooms? This cannot be undone.",
+  "@deleteProjectConfirmation": {
+    "placeholders": { "projectName": { "type": "String" } }
+  }
 }

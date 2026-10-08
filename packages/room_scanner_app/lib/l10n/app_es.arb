@@ -617,5 +617,9 @@
   "openingGeomOverlaps": "La abertura se superpone con otra puerta o ventana.",
   "openingGeomUpdateFailed": "No se pudo actualizar la abertura.",
   "openingGeomInvalidWallOrMeasurements": "Elegí una pared y medidas válidas para la abertura.",
-  "openingGeomConnectedMustBeOnWall": "La abertura conectada debe permanecer sobre una pared de ambos ambientes."
+  "openingGeomConnectedMustBeOnWall": "La abertura conectada debe permanecer sobre una pared de ambos ambientes.",
+  "deleteProjectConfirmation": "¿Eliminar \"{projectName}\" y todos sus ambientes? Esta acción no se puede deshacer.",
+  "@deleteProjectConfirmation": {
+    "placeholders": { "projectName": { "type": "String" } }
+  }
 }
