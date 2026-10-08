@@ -36,10 +36,10 @@ class _MeasurementEditorScreenState extends State<MeasurementEditorScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.straighten_outlined,
                   size: 64,
-                  color: Colors.black38,
+                  color: Theme.of(context).disabledColor,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -54,7 +54,9 @@ class _MeasurementEditorScreenState extends State<MeasurementEditorScreen> {
                 Text(
                   l10n.measurementEditorEmptyHint,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.black54),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -172,7 +174,10 @@ class _MeasurementEditorScreenState extends State<MeasurementEditorScreen> {
         const SizedBox(height: 6),
         Text(
           l10n.selectWallToEdit,
-          style: const TextStyle(color: Colors.black54, height: 1.3),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            height: 1.3,
+          ),
         ),
         const SizedBox(height: 12),
         ...List.generate(room.points.length, (wallIndex) {
@@ -204,7 +209,11 @@ class _MeasurementEditorScreenState extends State<MeasurementEditorScreen> {
                 _formatArea(area, measurementSystem),
               ),
             ),
-            Container(width: 1, height: 48, color: Colors.black12),
+            Container(
+              width: 1,
+              height: 48,
+              color: Theme.of(context).dividerColor,
+            ),
             Expanded(
               child: _metric(
                 Icons.timeline,
@@ -212,7 +221,11 @@ class _MeasurementEditorScreenState extends State<MeasurementEditorScreen> {
                 _formatLength(perimeter, measurementSystem),
               ),
             ),
-            Container(width: 1, height: 48, color: Colors.black12),
+            Container(
+              width: 1,
+              height: 48,
+              color: Theme.of(context).dividerColor,
+            ),
             Expanded(
               child: _metric(
                 Icons.polyline,
@@ -239,7 +252,10 @@ class _MeasurementEditorScreenState extends State<MeasurementEditorScreen> {
         Text(
           label,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.black54, fontSize: 11),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 11,
+          ),
         ),
       ],
     );
@@ -333,7 +349,9 @@ class _MeasurementEditorScreenState extends State<MeasurementEditorScreen> {
                     Text(
                       l10n.currentMeasurement(
                           _formatLength(currentLength, measurementSystem)),
-                      style: const TextStyle(color: Colors.black54),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     if (measurementSystem == MeasurementSystem.metric)
@@ -416,8 +434,8 @@ class _MeasurementEditorScreenState extends State<MeasurementEditorScreen> {
                     const SizedBox(height: 12),
                     Text(
                       l10n.wallLengthChangeNotice,
-                      style: const TextStyle(
-                        color: Colors.black54,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,
                         height: 1.35,
                       ),

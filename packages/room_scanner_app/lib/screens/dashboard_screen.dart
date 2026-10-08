@@ -309,7 +309,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             localizations.noSavedProjects,
             style: TextStyle(
               fontSize: 18,
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(

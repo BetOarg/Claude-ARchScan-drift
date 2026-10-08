@@ -1307,10 +1307,10 @@ class _EmptyPlanView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.architecture_outlined,
               size: 72,
-              color: Colors.black38,
+              color: Theme.of(context).disabledColor,
             ),
             const SizedBox(height: 16),
             Text(
@@ -1321,7 +1321,9 @@ class _EmptyPlanView extends StatelessWidget {
             Text(
               localizations.completeScanToViewPlan,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.black54),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
