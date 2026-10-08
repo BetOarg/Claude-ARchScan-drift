@@ -618,6 +618,9 @@
   "openingGeomUpdateFailed": "No se pudo actualizar la abertura.",
   "openingGeomInvalidWallOrMeasurements": "Elegí una pared y medidas válidas para la abertura.",
   "openingGeomConnectedMustBeOnWall": "La abertura conectada debe permanecer sobre una pared de ambos ambientes.",
+  "exitScanTitle": "¿Salir del escaneo?",
+  "exitScanConfirmation": "Hay datos de escaneo sin guardar. Si volvés atrás, se perderá este progreso.",
+  "exitScanDiscard": "Descartar",
   "deleteProjectConfirmation": "¿Eliminar \"{projectName}\" y todos sus ambientes? Esta acción no se puede deshacer.",
   "@deleteProjectConfirmation": {
     "placeholders": { "projectName": { "type": "String" } }

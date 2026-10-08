@@ -452,15 +452,24 @@ class _ARScannerScreenState extends State<ARScannerScreen>
       return _buildArInitializationFallback(l10n);
     }
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          // ============================================================
-          // CAPA 1: VIEWPORT AR REAL
-          // ============================================================
+    final hasData = provider.currentRoom != null &&
+        (provider.currentRoom!.points.isNotEmpty);
 
-          ArchScanArView(
+    return PopScope(
+      canPop: !hasData,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _confirmExitScan();
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          children: [
+            // ============================================================
+            // CAPA 1: VIEWPORT AR REAL
+            // ============================================================
+
+            ArchScanArView(
             key: ValueKey<int>(arViewGeneration),
             onCreated:
                 (
@@ -759,7 +768,32 @@ class _ARScannerScreenState extends State<ARScannerScreen>
           ),
         ],
       ),
+      ),
     );
+  }
+
+  Future<void> _confirmExitScan() async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.exitScanTitle),
+        content: Text(l10n.exitScanConfirmation),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.exitScanDiscard),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   Widget _buildAdaptiveTopHud(ScannerProvider provider, AppLocalizations l10n) {

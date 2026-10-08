@@ -525,17 +525,51 @@ class _BasicScannerScreenState extends State<BasicScannerScreen>
       return _buildInitializationError();
     }
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          _buildCameraPreview(),
-          _buildScannerOverlay(provider, completedRooms),
-          _buildTopHud(provider),
-          _buildBottomPanel(provider),
+    final hasData = provider.currentRoom != null &&
+        (provider.currentRoom!.points.isNotEmpty);
+
+    return PopScope(
+      canPop: !hasData,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _confirmExitScan();
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          children: [
+            _buildCameraPreview(),
+            _buildScannerOverlay(provider, completedRooms),
+            _buildTopHud(provider),
+            _buildBottomPanel(provider),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmExitScan() async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.exitScanTitle),
+        content: Text(l10n.exitScanConfirmation),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.exitScanDiscard),
+          ),
         ],
       ),
     );
+    if (confirmed == true && mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   Widget _buildInitializationError() {

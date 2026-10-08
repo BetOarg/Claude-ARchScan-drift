@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:room_scanner_core/room_scanner_core.dart';
 
@@ -353,9 +354,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             subtitle: Text(
               localizations.projectUpdated(
-                '${project.updatedAt.day}/'
-                '${project.updatedAt.month}/'
-                '${project.updatedAt.year}',
+                DateFormat.yMMMd(
+                  Localizations.localeOf(context).toString(),
+                ).format(project.updatedAt),
               ),
             ),
             trailing: Row(
