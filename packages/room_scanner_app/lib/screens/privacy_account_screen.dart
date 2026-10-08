@@ -17,7 +17,7 @@ class PrivacyAccountScreen extends StatefulWidget {
 
 class _PrivacyAccountScreenState extends State<PrivacyAccountScreen> {
   static final Uri _privacyPolicyUri = Uri.parse(
-    'https://sites.google.com/view/archscan/privacy',
+    'https://sites.google.com/view/archscan/privacidad-privacy',
   );
 
   bool _isDeleting = false;

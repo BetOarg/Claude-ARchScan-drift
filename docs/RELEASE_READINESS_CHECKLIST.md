@@ -1,7 +1,7 @@
 # Lista de preparación para publicación — ARchScan
 
-**Última revisión:** 24/09/2026  
-**Main:** `ae2e90ea5bb88a0ebf21ba9ab72e259bbaeef66f`  
+**Última revisión:** 08/10/2026  
+**Main:** `4461613`  
 **Versión declarada:** `2.7.0+4`
 
 ## Estado verificable en repositorio
@@ -29,8 +29,18 @@
 ## Estado administrativo
 
 - [x] No hay PR abiertos.
-- [ ] Eliminar físicamente la rama de trabajo fusionada que todavía aparece en GitHub: `fix/project-switch-rename-dimensions`.
+- [ ] Eliminar ramas stale remotas (10 pendientes: chore/final-audit-state, chore/finish-isar-removal, fix/project-switch-rename-dimensions, migration/drift-persistence, refactor/archscan-stabilization-v2, refactor/floor-plan-dialogs, refactor/floor-plan-painter, refactor/opening-wall-geometry, refactor/plan-geometry-to-core, refactor/scanner-room-session).
 - [ ] Proteger `main`.
+- [x] Error boundaries configurados (FlutterError.onError, PlatformDispatcher.onError, ErrorWidget.builder).
+- [x] Confirmación antes de borrar proyectos.
+- [x] PopScope en scanners para prevenir pérdida de datos.
+- [x] Colores adaptados a dark theme.
+- [x] Enlace a política de privacidad en la pantalla de privacidad.
+- [x] Proguard rules para AR plugin.
+- [x] Formateo de fechas con DateFormat locale-aware.
+- [x] Archivos generados fuera de git tracking.
+- [x] Dead code eliminado.
+- [x] key.properties fuera de git (rotar contraseñas pendiente).
 - [ ] Activar eliminación automática de ramas fusionadas si se desea mantener el repositorio limpio.
 
 La rama de trabajo restante es administrativa; no forma parte del artefacto de publicación.
