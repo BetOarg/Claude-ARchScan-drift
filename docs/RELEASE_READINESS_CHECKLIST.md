@@ -29,7 +29,7 @@
 ## Estado administrativo
 
 - [x] No hay PR abiertos.
-- [ ] Eliminar ramas stale remotas (10 pendientes: chore/final-audit-state, chore/finish-isar-removal, fix/project-switch-rename-dimensions, migration/drift-persistence, refactor/archscan-stabilization-v2, refactor/floor-plan-dialogs, refactor/floor-plan-painter, refactor/opening-wall-geometry, refactor/plan-geometry-to-core, refactor/scanner-room-session).
+- [x] Eliminar ramas stale remotas (10 eliminadas el 09/10/2026).
 - [ ] Proteger `main`.
 - [x] Error boundaries configurados (FlutterError.onError, PlatformDispatcher.onError, ErrorWidget.builder).
 - [x] Confirmación antes de borrar proyectos.
@@ -41,7 +41,7 @@
 - [x] Archivos generados fuera de git tracking.
 - [x] Dead code eliminado.
 - [x] key.properties fuera de git (rotar contraseñas pendiente).
-- [ ] Activar eliminación automática de ramas fusionadas si se desea mantener el repositorio limpio.
+- [x] Eliminación automática de ramas fusionadas activada.
 
 La rama de trabajo restante es administrativa; no forma parte del artefacto de publicación.
 
