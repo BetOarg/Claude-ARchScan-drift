@@ -626,5 +626,35 @@
   "deleteProjectConfirmation": "Delete \"{projectName}\" and all its rooms? This cannot be undone.",
   "@deleteProjectConfirmation": {
     "placeholders": { "projectName": { "type": "String" } }
+  },
+  "scannerOverlay": "Floor plan drawing overlay",
+  "scanProgressStatus": "Scan progress: {count} corners captured",
+  "@scanProgressStatus": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "arCrosshair": "AR aiming crosshair",
+  "arTrackingStatus": "AR tracking: {status}",
+  "@arTrackingStatus": {
+    "placeholders": { "status": { "type": "String" } }
+  },
+  "floorPlanCanvas": "Floor plan canvas with {roomCount} rooms",
+  "@floorPlanCanvas": {
+    "placeholders": { "roomCount": { "type": "int" } }
+  },
+  "floorPlanSummaryBadge": "{rooms} rooms, total area {area}",
+  "@floorPlanSummaryBadge": {
+    "placeholders": { "rooms": { "type": "int" }, "area": { "type": "String" } }
+  },
+  "emptyFloorPlanImage": "No rooms scanned yet",
+  "emptyDashboardImage": "No saved projects",
+  "emptyMeasurementEditorImage": "No rooms to edit",
+  "roomSummaryMetrics": "Area: {area}, Perimeter: {perimeter}, Corners: {corners}",
+  "@roomSummaryMetrics": {
+    "placeholders": { "area": { "type": "String" }, "perimeter": { "type": "String" }, "corners": { "type": "int" } }
+  },
+  "deleteLocalDataSection": "Danger zone: permanently delete all local data",
+  "privacySectionLabel": "{title}: {description}",
+  "@privacySectionLabel": {
+    "placeholders": { "title": { "type": "String" }, "description": { "type": "String" } }
   }
 }

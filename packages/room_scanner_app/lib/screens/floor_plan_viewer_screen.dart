@@ -851,27 +851,30 @@ class _FloorPlanViewerScreenState extends State<FloorPlanViewerScreen>
                           ? (_) => _endTouchTransform()
                           : null,
                       child: _trackPlanPointer(
-                        SizedBox.expand(
-                          child: CustomPaint(
-                            foregroundPainter: _planSelectionPainter(rooms),
-                            painter: FloorPlanPainter(
-                              rooms: rooms,
-                              transform: _transformPoint,
-                              selectedRoomId: _selectedRoomId,
-                              selectedFeatureId: _selectedFeatureId,
-                              formatLength: (length) =>
-                                  _formatLength(length, measurementSystem),
-                              formatOpeningDimensions: (feature) =>
-                                  _formatOpeningPlanDimensions(
-                                    feature,
-                                    measurementSystem,
-                                  ),
-                              sharedWallLabel: localizations.sharedWall,
-                              partialSharedWallLabel:
-                                  localizations.partialSharedWall,
-                              openRoomLabel: localizations.planOpenContour,
-                              continuationSelectionMode:
-                                  widget.selectContinuationOpening,
+                        Semantics(
+                          label: localizations.floorPlanCanvas(rooms.length),
+                          child: SizedBox.expand(
+                            child: CustomPaint(
+                              foregroundPainter: _planSelectionPainter(rooms),
+                              painter: FloorPlanPainter(
+                                rooms: rooms,
+                                transform: _transformPoint,
+                                selectedRoomId: _selectedRoomId,
+                                selectedFeatureId: _selectedFeatureId,
+                                formatLength: (length) =>
+                                    _formatLength(length, measurementSystem),
+                                formatOpeningDimensions: (feature) =>
+                                    _formatOpeningPlanDimensions(
+                                      feature,
+                                      measurementSystem,
+                                    ),
+                                sharedWallLabel: localizations.sharedWall,
+                                partialSharedWallLabel:
+                                    localizations.partialSharedWall,
+                                openRoomLabel: localizations.planOpenContour,
+                                continuationSelectionMode:
+                                    widget.selectContinuationOpening,
+                              ),
                             ),
                           ),
                         ),
@@ -948,22 +951,28 @@ class _FloorPlanViewerScreenState extends State<FloorPlanViewerScreen>
                     left: 12,
                     top: 12,
                     child: IgnorePointer(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
+                      child: Semantics(
+                        label: localizations.floorPlanSummaryBadge(
+                          rooms.length,
+                          _formatArea(provider.totalProjectArea, measurementSystem),
                         ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.72),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '${localizations.roomCount(rooms.length)} · '
-                          '${_formatArea(provider.totalProjectArea, measurementSystem)}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.72),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${localizations.roomCount(rooms.length)} · '
+                            '${_formatArea(provider.totalProjectArea, measurementSystem)}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ),
@@ -1307,10 +1316,13 @@ class _EmptyPlanView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.architecture_outlined,
-              size: 72,
-              color: Theme.of(context).disabledColor,
+            Semantics(
+              label: localizations.emptyFloorPlanImage,
+              child: Icon(
+                Icons.architecture_outlined,
+                size: 72,
+                color: Theme.of(context).disabledColor,
+              ),
             ),
             const SizedBox(height: 16),
             Text(

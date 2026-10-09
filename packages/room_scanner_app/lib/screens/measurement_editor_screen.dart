@@ -36,11 +36,14 @@ class _MeasurementEditorScreenState extends State<MeasurementEditorScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
+                Semantics(
+                label: l10n.emptyMeasurementEditorImage,
+                child: Icon(
                   Icons.straighten_outlined,
                   size: 64,
                   color: Theme.of(context).disabledColor,
                 ),
+              ),
                 const SizedBox(height: 16),
                 Text(
                   l10n.noRoomsToEditMessage,
@@ -196,44 +199,51 @@ class _MeasurementEditorScreenState extends State<MeasurementEditorScreen> {
     final measurementSystem =
         context.watch<MeasurementSettingsProvider>().system;
 
-    return Card(
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Expanded(
-              child: _metric(
-                Icons.square_foot,
-                l10n.areaLabel,
-                _formatArea(area, measurementSystem),
+    return Semantics(
+      label: l10n.roomSummaryMetrics(
+        _formatArea(area, measurementSystem),
+        _formatLength(perimeter, measurementSystem),
+        room.points.length,
+      ),
+      child: Card(
+        elevation: 0,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Expanded(
+                child: _metric(
+                  Icons.square_foot,
+                  l10n.areaLabel,
+                  _formatArea(area, measurementSystem),
+                ),
               ),
-            ),
-            Container(
-              width: 1,
-              height: 48,
-              color: Theme.of(context).dividerColor,
-            ),
-            Expanded(
-              child: _metric(
-                Icons.timeline,
-                l10n.perimeterLabel,
-                _formatLength(perimeter, measurementSystem),
+              Container(
+                width: 1,
+                height: 48,
+                color: Theme.of(context).dividerColor,
               ),
-            ),
-            Container(
-              width: 1,
-              height: 48,
-              color: Theme.of(context).dividerColor,
-            ),
-            Expanded(
-              child: _metric(
-                Icons.polyline,
-                l10n.cornersLabel,
-                '${room.points.length}',
+              Expanded(
+                child: _metric(
+                  Icons.timeline,
+                  l10n.perimeterLabel,
+                  _formatLength(perimeter, measurementSystem),
+                ),
               ),
-            ),
-          ],
+              Container(
+                width: 1,
+                height: 48,
+                color: Theme.of(context).dividerColor,
+              ),
+              Expanded(
+                child: _metric(
+                  Icons.polyline,
+                  l10n.cornersLabel,
+                  '${room.points.length}',
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

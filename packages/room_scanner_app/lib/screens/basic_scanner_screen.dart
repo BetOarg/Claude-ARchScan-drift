@@ -647,18 +647,23 @@ class _BasicScannerScreenState extends State<BasicScannerScreen>
     final points = room?.points ?? const <ARPoint>[];
     final features = room?.features ?? const <WallFeature>[];
 
-    return IgnorePointer(
-      child: CustomPaint(
-        painter: ScannerGuidePainter(
-          points: points,
-          features: features,
-          previousRooms:
-              activeContinuationReference == null && activeResumeRoom == null
-                  ? const <RoomModel>[]
-                  : completedRooms,
-          continuationReference: activeContinuationReference,
+    final l10n = AppLocalizations.of(context)!;
+
+    return Semantics(
+      label: l10n.scannerOverlay,
+      child: IgnorePointer(
+        child: CustomPaint(
+          painter: ScannerGuidePainter(
+            points: points,
+            features: features,
+            previousRooms:
+                activeContinuationReference == null && activeResumeRoom == null
+                    ? const <RoomModel>[]
+                    : completedRooms,
+            continuationReference: activeContinuationReference,
+          ),
+          size: Size.infinite,
         ),
-        size: Size.infinite,
       ),
     );
   }
@@ -679,11 +684,15 @@ class _BasicScannerScreenState extends State<BasicScannerScreen>
           Row(
             children: [
               Expanded(
-                child: _hudCard(
-                  icon: Icons.architecture,
-                  title: localizedScanRoomName(provider, l10n),
-                  subtitle: scanRecommendation(count, l10n),
-                  onTap: () => showCustomRoomNameDialog(provider),
+                child: Semantics(
+                  label: '${localizedScanRoomName(provider, l10n)}, ${scanRecommendation(count, l10n)}',
+                  button: true,
+                  child: _hudCard(
+                    icon: Icons.architecture,
+                    title: localizedScanRoomName(provider, l10n),
+                    subtitle: scanRecommendation(count, l10n),
+                    onTap: () => showCustomRoomNameDialog(provider),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
@@ -702,27 +711,31 @@ class _BasicScannerScreenState extends State<BasicScannerScreen>
           ),
           const SizedBox(height: 8),
           if (continuation != null) ...[
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFF8A00).withValues(alpha: 0.88),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.add_road_rounded, color: Colors.white),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      l10n.continuationFromOpening,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+            Semantics(
+              liveRegion: true,
+              label: l10n.continuationFromOpening,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF8A00).withValues(alpha: 0.88),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.add_road_rounded, color: Colors.white),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        l10n.continuationFromOpening,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 8),

@@ -302,7 +302,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const ArchScanLogo(size: 88),
+          Semantics(
+            label: localizations.emptyDashboardImage,
+            child: const ArchScanLogo(size: 88),
+          ),
           const SizedBox(
             height: 16,
           ),

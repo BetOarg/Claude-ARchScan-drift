@@ -119,17 +119,19 @@ class _PrivacyAccountScreenState extends State<PrivacyAccountScreen> {
               label: Text(localizations.viewPrivacyPolicy),
             ),
             const SizedBox(height: 16),
-            Card(
-              color: Theme.of(context).colorScheme.errorContainer,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      localizations.deleteLocalDataTitle,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
+            Semantics(
+              label: localizations.deleteLocalDataSection,
+              child: Card(
+                color: Theme.of(context).colorScheme.errorContainer,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        localizations.deleteLocalDataTitle,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                     const SizedBox(height: 8),
                     Text(localizations.deleteLocalDataDescription),
                     const SizedBox(height: 16),
@@ -155,6 +157,7 @@ class _PrivacyAccountScreenState extends State<PrivacyAccountScreen> {
                 ),
               ),
             ),
+            ),
           ],
         ),
       ),
@@ -175,15 +178,18 @@ class _PrivacySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Icon(icon),
-        title: Text(title),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Text(description),
+    return Semantics(
+      label: AppLocalizations.of(context)!.privacySectionLabel(title, description),
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: ListTile(
+          contentPadding: const EdgeInsets.all(16),
+          leading: Icon(icon),
+          title: Text(title),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(description),
+          ),
         ),
       ),
     );

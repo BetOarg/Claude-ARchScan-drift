@@ -626,5 +626,35 @@
   "deleteProjectConfirmation": "¿Eliminar \"{projectName}\" y todos sus ambientes? Esta acción no se puede deshacer.",
   "@deleteProjectConfirmation": {
     "placeholders": { "projectName": { "type": "String" } }
+  },
+  "scannerOverlay": "Superposición del dibujo de plano",
+  "scanProgressStatus": "Progreso del escaneo: {count} esquinas capturadas",
+  "@scanProgressStatus": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "arCrosshair": "Retícula de puntería AR",
+  "arTrackingStatus": "Seguimiento AR: {status}",
+  "@arTrackingStatus": {
+    "placeholders": { "status": { "type": "String" } }
+  },
+  "floorPlanCanvas": "Lienzo de plano con {roomCount} ambientes",
+  "@floorPlanCanvas": {
+    "placeholders": { "roomCount": { "type": "int" } }
+  },
+  "floorPlanSummaryBadge": "{rooms} ambientes, superficie total {area}",
+  "@floorPlanSummaryBadge": {
+    "placeholders": { "rooms": { "type": "int" }, "area": { "type": "String" } }
+  },
+  "emptyFloorPlanImage": "Aún no hay ambientes escaneados",
+  "emptyDashboardImage": "Sin proyectos guardados",
+  "emptyMeasurementEditorImage": "Sin ambientes para editar",
+  "roomSummaryMetrics": "Superficie: {area}, Perímetro: {perimeter}, Esquinas: {corners}",
+  "@roomSummaryMetrics": {
+    "placeholders": { "area": { "type": "String" }, "perimeter": { "type": "String" }, "corners": { "type": "int" } }
+  },
+  "deleteLocalDataSection": "Zona de peligro: eliminar permanentemente todos los datos locales",
+  "privacySectionLabel": "{title}: {description}",
+  "@privacySectionLabel": {
+    "placeholders": { "title": { "type": "String" }, "description": { "type": "String" } }
   }
 }

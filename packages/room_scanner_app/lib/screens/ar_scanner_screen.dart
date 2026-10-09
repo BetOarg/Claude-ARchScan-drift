@@ -494,34 +494,40 @@ class _ARScannerScreenState extends State<ARScannerScreen>
           // ============================================================
           if (_isContinuationCalibrated)
             Positioned.fill(
-              child: IgnorePointer(
-                child: CustomPaint(
-                  painter: ScannerGuidePainter(
-                    points: provider.currentRoom?.points ?? const <ARPoint>[],
-                    features:
-                        provider.currentRoom?.features ?? const <WallFeature>[],
-                    previousRooms:
-                        activeContinuationReference == null &&
-                            activeResumeRoom == null
-                        ? const <RoomModel>[]
-                        : context
-                              .watch<FloorPlanProvider>()
-                              .completedRooms
-                              .toList(growable: false),
-                    continuationReference: activeContinuationReference,
+              child: Semantics(
+                label: l10n.scannerOverlay,
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: ScannerGuidePainter(
+                      points: provider.currentRoom?.points ?? const <ARPoint>[],
+                      features:
+                          provider.currentRoom?.features ?? const <WallFeature>[],
+                      previousRooms:
+                          activeContinuationReference == null &&
+                              activeResumeRoom == null
+                          ? const <RoomModel>[]
+                          : context
+                                .watch<FloorPlanProvider>()
+                                .completedRooms
+                                .toList(growable: false),
+                      continuationReference: activeContinuationReference,
+                    ),
                   ),
                 ),
               ),
             ),
 
           Center(
-            child: Container(
-              width: 14,
-              height: 14,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.9),
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.black, width: 2),
+            child: Semantics(
+              label: l10n.arCrosshair,
+              child: Container(
+                width: 14,
+                height: 14,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.black, width: 2),
+                ),
               ),
             ),
           ),
@@ -546,21 +552,25 @@ class _ARScannerScreenState extends State<ARScannerScreen>
                   (narrowLayout ? 112 : 70),
               left: 16,
               right: 16,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white24),
-                ),
-                child: Text(
-                  scanRecommendation(provider.currentPointsCount, l10n),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
+              child: Semantics(
+                liveRegion: true,
+                label: l10n.scanProgressStatus(provider.currentPointsCount),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: Text(
+                    scanRecommendation(provider.currentPointsCount, l10n),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                  ),
                 ),
               ),
             ),
@@ -572,36 +582,40 @@ class _ARScannerScreenState extends State<ARScannerScreen>
                   (narrowLayout ? 154 : 112),
               left: 16,
               right: 16,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 11,
-                ),
-                decoration: BoxDecoration(
-                  color: _isContinuationCalibrated
-                      ? Colors.green.withValues(alpha: 0.88)
-                      : const Color(0xFFFF8A00).withValues(alpha: 0.92),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      _isContinuationCalibrated
-                          ? Icons.check_circle_outline
-                          : Icons.center_focus_strong,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        _continuationInstruction(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
+              child: Semantics(
+                liveRegion: true,
+                label: _continuationInstruction(),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 11,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _isContinuationCalibrated
+                        ? Colors.green.withValues(alpha: 0.88)
+                        : const Color(0xFFFF8A00).withValues(alpha: 0.92),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _isContinuationCalibrated
+                            ? Icons.check_circle_outline
+                            : Icons.center_focus_strong,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _continuationInstruction(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -828,19 +842,24 @@ class _ARScannerScreenState extends State<ARScannerScreen>
         foregroundColor: Colors.white,
       ),
     );
-    final trackingChip = Chip(
-      avatar: Icon(
-        Icons.circle,
-        size: 10,
-        color: provider.isTrackingOk ? Colors.greenAccent : Colors.orangeAccent,
+    final trackingLabel = provider.isTrackingOk ? l10n.arTrackingActive : l10n.arCalibrating;
+    final trackingChip = Semantics(
+      liveRegion: true,
+      label: l10n.arTrackingStatus(trackingLabel),
+      child: Chip(
+        avatar: Icon(
+          Icons.circle,
+          size: 10,
+          color: provider.isTrackingOk ? Colors.greenAccent : Colors.orangeAccent,
+        ),
+        label: Text(
+          trackingLabel,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        backgroundColor: Colors.black87,
+        labelStyle: const TextStyle(color: Colors.white),
       ),
-      label: Text(
-        provider.isTrackingOk ? l10n.arTrackingActive : l10n.arCalibrating,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      backgroundColor: Colors.black87,
-      labelStyle: const TextStyle(color: Colors.white),
     );
 
     return LayoutBuilder(
