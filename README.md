@@ -101,7 +101,7 @@ Las herramientas de geometría y el editor común no dependen del modo de captur
 
 ## Desarrollo
 
-- Flutter **3.47.0** en CI y workflows de release; mantener el toolchain alineado con los workflows versionados.
+- Flutter **3.47.5** en CI y workflows de release; mantener el toolchain alineado con los workflows versionados.
 - Java 17 para Android; macOS/Xcode y CocoaPods para iOS.
 - Android: mínimo API 28, compilación y destino API 36; ARCore opcional.
 - Identificadores actuales: Android e iOS `com.bet0.ARchScan`. No cambiarlos al publicar sin evaluar identidad de tienda y compatibilidad de actualizaciones.
