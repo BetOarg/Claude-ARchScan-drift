@@ -1,7 +1,7 @@
 # Lista de preparación para publicación — ARchScan
 
-**Última revisión:** 08/10/2026  
-**Main:** `4461613`  
+**Última revisión:** 09/10/2026  
+**Main:** (ver último commit en main)  
 **Versión declarada:** `2.7.0+4`
 
 ## Estado verificable en repositorio
