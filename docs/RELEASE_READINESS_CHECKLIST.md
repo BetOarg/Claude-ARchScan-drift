@@ -30,7 +30,7 @@
 
 - [x] No hay PR abiertos.
 - [x] Eliminar ramas stale remotas (10 eliminadas el 09/10/2026).
-- [ ] Proteger `main`.
+- [x] Proteger `main` (ruleset con 4 status checks requeridos).
 - [x] Error boundaries configurados (FlutterError.onError, PlatformDispatcher.onError, ErrorWidget.builder).
 - [x] Confirmación antes de borrar proyectos.
 - [x] PopScope en scanners para prevenir pérdida de datos.
